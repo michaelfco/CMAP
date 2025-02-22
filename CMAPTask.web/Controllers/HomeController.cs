@@ -22,50 +22,20 @@ namespace CMAPTask.web.Controllers
      
         public async Task<IActionResult> Index()
         {
-            var entries = await _service.GetEntriesAsync();
-
-            var totalHoursByDay = entries
-         .GroupBy(e => (e.UserName, e.Date))
-         .ToDictionary(g => g.Key, g => g.Sum(e => e.HoursWorked));
-
-
-            var viewModel = _mapper.Map<List<TimesheetViewModel>>(entries);
-
-            foreach (var vm in viewModel)
-            {
-                var key = (vm.UserName, vm.Date);
-                if (totalHoursByDay.TryGetValue(key, out int totalHours))
-                {
-                    vm.TotalHoursForDay = totalHours;
-                }
-            }
-
+            ViewData["Title"] = "Timesheet";
+            var data = await _service.GetEntriesAsync();  
+            //use automapper to map to viewmodel
+            var viewModel = _mapper.Map<List<TimesheetViewModel>>(data);         
             return View(viewModel);
         }
-      
-
-        [HttpPost]        
-        [Route("Home/Create")]
-        public async Task<IActionResult> Create(TimesheetDto entry)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState
-                    .Where(x => x.Value.Errors.Count > 0)
-                    .ToDictionary(
-               x => x.Key,
-               x => x.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-           );
-                return Json(new { success = false, errors = errors });
-            }
-            await _service.AddEntryAsync(entry);
-            return Json(new { success = true });
-        }
+           
 
         public async Task<IActionResult> DownloadCsv()
-        {
+        {            
+            //data to be exported
             var dtExport = await _service.GetEntriesAsync();
 
+            //Group and calculate grouped hours
             var group = dtExport
             .GroupBy(e => new { e.UserName, e.Date })
             .SelectMany(g => g.Select(e => new
@@ -85,6 +55,24 @@ namespace CMAPTask.web.Controllers
             csv.WriteRecords(group);
             writer.Flush();
             return File(memoryStream.ToArray(), "text/csv", $"timesheets_{DateTime.Now.ToString("yyyy_MM_dd")}.csv");
+        }
+
+
+        [HttpPost]
+        [Route("Home/Create")]
+        public async Task<IActionResult> Create(TimesheetDto entry)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return Json(new { success = false, errors });
+            }
+            await _service.AddEntryAsync(entry);
+            return Json(new { success = true });
         }
     }
 }

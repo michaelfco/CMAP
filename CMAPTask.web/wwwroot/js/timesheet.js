@@ -1,10 +1,9 @@
-﻿// When the modal is shown, make an AJAX call to get the partial view and load it inside the modal
-$('#createModal').on('show.bs.modal', function (event) {
+﻿$('#createModal').on('show.bs.modal', function (event) {
     var modal = $(this);
 
-    // Make the AJAX call to load the partial view
+    //load partial view - ajax
     $.ajax({
-        url: '@Url.Action("Create", "Home")', // Assuming you have a Create action in Home controller
+        url: '@Url.Action("Create", "Home")', 
         type: 'GET',
         success: function (data) {
             modal.find('#modalContent').html(data);
@@ -17,28 +16,48 @@ $('#createModal').on('show.bs.modal', function (event) {
 
 
 $("#saveTimesheet").on("click", function (e) {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
 
     var form = $("#timesheetForm")[0];
 
     if (form.checkValidity() === false) {
-        $(form).addClass("was-validated"); // Highlight invalid fields
+        //highlight invalid fields
+        $(form).addClass("was-validated");
     } else {
-        // If valid, submit the data via AJAX
+        //If valid submit the data via AJAX
         var formData = {
             UserName: $("#UserName").val(),
+            Date: $("#Date").val(),
             Project: $("#Project").val(),
             Description: $("#Description").val(),
             HoursWorked: $("#HoursWorked").val(),
         };
 
         $.ajax({
-            url: "/Home/Create", // Adjust based on your controller action
+            url: "/Home/Create",
             type: "POST",
             data: formData,
             success: function (response) {
-                $("#createModal").modal("hide"); // Close modal on success
-                location.reload(); // Refresh the page or update UI dynamically
+
+                if (response.success) {
+                    $("#createModal").modal("hide");
+                    //show success message
+                    $("#msgError").html('<div class="alert alert-success">Timesheet entry added successfully!</div>');
+                    setTimeout(function () {
+                        $("#msgError").fadeOut("slow", function () {
+                            location.reload(); 
+                        });
+                    }, 3000);
+                    
+                } else {
+                    //Display validation errors inside the modal
+                    var errorContainer = $("#errorMessages");
+                    //clear old errors
+                    errorContainer.html(""); 
+                    $.each(response.errors, function (index, error) {
+                        errorContainer.append(`<div class="alert alert-danger">${error}</div>`);
+                    });
+                }
             },
             error: function () {
                 alert("An error occurred. Please try again.");
