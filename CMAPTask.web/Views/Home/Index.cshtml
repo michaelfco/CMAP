@@ -2,4 +2,79 @@
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
+    Layout = "_Layout";
 }
+
+@model IEnumerable<CMAPTask.web.ViewModel.TimesheetViewModel>
+
+
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createModalLabel">Create New Timesheet Entry</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Here you can load your "Create" form or any content -->
+                @* Render your Create form or partial view here *@
+                @Html.Partial("_TimesheetCreate")
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveTimesheet">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<h2>Timesheet</h2>
+<br /><br />
+
+<button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#createModal">Create</button>
+@* <a href="/Home/Create" class="btn btn-success btn-sm">Create</a> *@
+<a href="/Home/DownloadCsv" class="btn btn-primary btn-sm">Export to CSV</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>User Name</th>
+            <th>Date</th>
+            <th>Project</th>
+            <th>Description</th>
+            <th>Hours Worked</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Any())
+        {
+            @foreach (var entry in Model)
+            {
+                <tr>
+                    <td>@entry.UserName</td>
+                    <td>@entry.Date.ToString("dd/MM/yyyy")</td>
+                    <td>@entry.Project</td>
+                    <td>@entry.Description</td>
+                    <td>@entry.HoursWorked</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5" style="text-align: center;">No records found</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+
+
+

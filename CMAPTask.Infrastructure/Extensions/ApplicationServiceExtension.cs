@@ -1,4 +1,7 @@
-﻿using CMAPTask.Infrastructure.Context;
+﻿using CMAPTask.Domain.Interfaces;
+using CMAPTask.Infrastructure.Context;
+using CMAPTask.Infrastructure.Repository;
+using CMAPTask.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,8 +25,10 @@ public static class ApplicationServiceExtension
 
         services.AddDbContext<CMAPDbContext>(options =>
 options.UseSqlite("Data Source=CmapTask.db"));
+
        
-        //services.AddScoped<IValidationService, ValidationService>();
+        services.AddScoped<ITimesheetRepository, TimesheetRepository>();
+        services.AddScoped<TimesheetService>();
 
         return services;
     }
