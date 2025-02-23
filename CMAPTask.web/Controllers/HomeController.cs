@@ -7,19 +7,23 @@ using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
 using CMAPTask.Domain.Entities;
 using CMAPTask.Application.DTOs;
+using CMAPTask.Application.Interfaces;
 
 namespace CMAPTask.web.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly TimesheetService _service;
+        private readonly ITimesheetService _service;
         private readonly IMapper _mapper;
-        public HomeController(TimesheetService service, IMapper mapper)
+
+        //DP - Dependency Injection
+        public HomeController(ITimesheetService service, IMapper mapper)
         {
             _service = service;
             _mapper = mapper;
         }
      
+        //SOLID - Single Responsability
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Timesheet";
@@ -28,8 +32,8 @@ namespace CMAPTask.web.Controllers
             var viewModel = _mapper.Map<List<TimesheetViewModel>>(data);         
             return View(viewModel);
         }
-           
 
+        //SOLID - Open/Closed Principle
         public async Task<IActionResult> DownloadCsv()
         {            
             //data to be exported
@@ -58,6 +62,7 @@ namespace CMAPTask.web.Controllers
         }
 
 
+        //SOLID - Single Responsibility,Dependency Inversion Principle(depends on ITimesheetService)
         [HttpPost]
         [Route("Home/Create")]
         public async Task<IActionResult> Create(TimesheetDto entry)

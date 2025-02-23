@@ -42,12 +42,14 @@ $("#saveTimesheet").on("click", function (e) {
                 if (response.success) {
                     $("#createModal").modal("hide");
                     //show success message
-                    $("#msgError").html('<div class="alert alert-success">Timesheet entry added successfully!</div>');
-                    setTimeout(function () {
-                        $("#msgError").fadeOut("slow", function () {
-                            location.reload(); 
-                        });
-                    }, 3000);
+                    localStorage.setItem("timesheetSuccess", "Timesheet entry added successfully!");
+                    location.reload(); 
+                    //$("#msgError").html('<div class="alert alert-success">Timesheet entry added successfully!</div>');
+                    //setTimeout(function () {
+                    //    $("#msgError").fadeOut("slow", function () {
+                    //        location.reload(); 
+                    //    });
+                    //}, 1000);
                     
                 } else {
                     //Display validation errors inside the modal
@@ -63,5 +65,16 @@ $("#saveTimesheet").on("click", function (e) {
                 alert("An error occurred. Please try again.");
             }
         });
+    }
+});
+
+$(document).ready(function () {
+    var successMessage = localStorage.getItem("timesheetSuccess");
+    if (successMessage) {
+        $("#msgError").html(`<div class="alert alert-success">${successMessage}</div>`);        
+        localStorage.removeItem("timesheetSuccess");      
+        setTimeout(function () {
+            $("#msgError").fadeOut("slow");
+        }, 3000);
     }
 });

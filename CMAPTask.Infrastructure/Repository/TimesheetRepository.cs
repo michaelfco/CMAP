@@ -17,17 +17,20 @@ public class TimesheetRepository: ITimesheetRepository
 {
     private readonly CMAPDbContext _context;
 
+    //SOLID - Single Responsability
     public TimesheetRepository(CMAPDbContext context)
     {
         _context = context;
     }
 
+    //SOLID - Single Responsability
     public async Task AddEntryAsync(Timesheet entry)
     {
         await _context.Timesheet.AddAsync(entry);
         await _context.SaveChangesAsync();
     }
 
+    //SOLID - Single Responsability
     public async Task<List<Timesheet>> GetAllEntriesAsync()
     {
         return await _context.Timesheet.ToListAsync();

@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35027.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMAPTask.web", "CMAPTask.web\CMAPTask.web.csproj", "{65749A84-7FBA-4018-933C-DACD07541DEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMAPTask.web", "CMAPTask.web\CMAPTask.web.csproj", "{65749A84-7FBA-4018-933C-DACD07541DEA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMAPTask.Application", "CMAPTask.Application\CMAPTask.Application.csproj", "{82FEF2F9-BCF8-4FDB-AF1D-5B173F7CBE1D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMAPTask.Application", "CMAPTask.Application\CMAPTask.Application.csproj", "{82FEF2F9-BCF8-4FDB-AF1D-5B173F7CBE1D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMAPTask.Domain", "CMAPTask.Domain\CMAPTask.Domain.csproj", "{0EB72D26-2734-4292-9573-9D254277DB2F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMAPTask.Domain", "CMAPTask.Domain\CMAPTask.Domain.csproj", "{0EB72D26-2734-4292-9573-9D254277DB2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMAPTask.Infrastructure", "CMAPTask.Infrastructure\CMAPTask.Infrastructure.csproj", "{728DA5B8-20CB-4B9A-91D8-1BD02CA1B500}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMAPTask.Infrastructure", "CMAPTask.Infrastructure\CMAPTask.Infrastructure.csproj", "{728DA5B8-20CB-4B9A-91D8-1BD02CA1B500}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMAPTask.Tests", "CMAPTask.Tests\CMAPTask.Tests.csproj", "{6BE0743A-167A-4784-8D26-E6EFBE759AAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{728DA5B8-20CB-4B9A-91D8-1BD02CA1B500}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{728DA5B8-20CB-4B9A-91D8-1BD02CA1B500}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{728DA5B8-20CB-4B9A-91D8-1BD02CA1B500}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BE0743A-167A-4784-8D26-E6EFBE759AAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BE0743A-167A-4784-8D26-E6EFBE759AAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BE0743A-167A-4784-8D26-E6EFBE759AAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BE0743A-167A-4784-8D26-E6EFBE759AAE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

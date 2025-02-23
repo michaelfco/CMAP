@@ -1,4 +1,5 @@
 ﻿using CMAPTask.Application.DTOs;
+using CMAPTask.Application.Interfaces;
 using CMAPTask.Domain.Entities;
 using CMAPTask.Domain.Interfaces;
 using System;
@@ -9,15 +10,17 @@ using System.Threading.Tasks;
 
 namespace CMAPTask.Infrastructure.Services;
 
-public class TimesheetService
+public class TimesheetService : ITimesheetService
 {
     private readonly ITimesheetRepository _repository;
 
+    //DP - Dependency Injection
     public TimesheetService(ITimesheetRepository repository)
     {
         _repository = repository;
     }
 
+    //SOLID - Single Responsability
     public async Task AddEntryAsync(TimesheetDto dto)
     {
         var entry = new Timesheet
@@ -28,10 +31,11 @@ public class TimesheetService
             Description = dto.Description,
             HoursWorked = dto.HoursWorked
         };
-
+        //SOLID - Dependency Inversion Principle(depends on ITimesheetRepository)
         await _repository.AddEntryAsync(entry);
     }
 
+    //SOLID - Single Responsability
     public async Task<List<Timesheet>> GetEntriesAsync()
     {
         return await _repository.GetAllEntriesAsync();
