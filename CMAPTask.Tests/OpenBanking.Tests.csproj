@@ -25,9 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CMAPTask.Domain\CMAPTask.Domain.csproj" />
-    <ProjectReference Include="..\CMAPTask.Infrastructure\CMAPTask.Infrastructure.csproj" />
-    <ProjectReference Include="..\CMAPTask.web\CMAPTask.web.csproj" />
+    <ProjectReference Include="..\CMAPTask.Domain\OpenBanking.Domain.csproj" />
+    <ProjectReference Include="..\CMAPTask.Infrastructure\OpenBanking.Infrastructure.csproj" />
+    <ProjectReference Include="..\CMAPTask.web\OpenBanking.web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CMAPTask.Domain\CMAPTask.Domain.csproj" />
+    <ProjectReference Include="..\CMAPTask.Domain\OpenBanking.Domain.csproj" />
   </ItemGroup>
 
 </Project>
