@@ -1,0 +1,300 @@
+﻿using CMAPTask.Application.Interfaces;
+using CMAPTask.Domain.Entities.OB;
+using CMAPTask.web.ViewModel;
+using Microsoft.AspNetCore.Mvc;
+using System.Net.Http;
+using System.Text.Json;
+
+namespace CMAPTask.web.Controllers
+{
+    public class StartConsentController : Controller
+    {
+        private readonly IOpenBankingService _openBankingService;
+        private readonly IRiskAnalyzer _riskAnalyzer;
+
+        public StartConsentController(IOpenBankingService openBankingService, IRiskAnalyzer riskAnalyzer)
+        {
+            _openBankingService = openBankingService;
+            _riskAnalyzer = riskAnalyzer;
+        }
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        public async Task<IActionResult> Consent(string institutionId)
+        {
+            institutionId = "SANDBOXFINANCE_SFIN0000";
+            if (string.IsNullOrEmpty(institutionId))
+            {
+                Console.WriteLine("[DEBUG] Institution ID is missing in Consent.");
+                return BadRequest("Institution ID is required");
+            }
+
+            Console.WriteLine($"[DEBUG] Starting consent for institution: {institutionId}");
+
+            var agreementId = await _openBankingService.CreateConsentSessionAsync(institutionId);
+            if (string.IsNullOrEmpty(agreementId))
+            {
+                Console.WriteLine($"[DEBUG] Failed to create agreement for institution: {institutionId}");
+                return StatusCode(500, "Failed to create agreement");
+            }
+
+            var redirectUri = "https://localhost:7210/StartConsent/ConsentCallback";
+            Console.WriteLine($"[DEBUG] Using redirect URI: {redirectUri}");
+
+            var requisition = await _openBankingService.CreateRequisitionAsync(
+                institutionId,
+                agreementId,
+                redirectUri
+            );
+
+            if (requisition == null || string.IsNullOrEmpty(requisition.Id) || string.IsNullOrEmpty(requisition.Link))
+            {
+                Console.WriteLine($"[DEBUG] Failed to create requisition for institution: {institutionId}");
+                return StatusCode(500, "Failed to create requisition");
+            }
+
+            HttpContext.Session.SetString("RequisitionId", requisition.Id);
+            Console.WriteLine($"[DEBUG] Stored requisition ID in session: {requisition.Id}");
+
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            var isDesktop = userAgent.Contains("Windows") || userAgent.Contains("Macintosh") || userAgent.Contains("Linux");
+
+            if (isDesktop)
+            {
+                // Desktop: Show QR code page
+                ViewBag.BankLink = requisition.Link;
+                return View("ShowQRCode");
+            }
+
+            // Mobile: redirect directly
+            Console.WriteLine($"[DEBUG] Redirecting to: {requisition.Link}");
+            return Redirect(requisition.Link);
+        }
+
+
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> ConsentCallback()
+        {
+            // Log the full callback URL and query parameters
+            var fullUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}{Request.QueryString}";
+            Console.WriteLine($"[DEBUG] Callback URL: {fullUrl}");
+            var queryParams = Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
+            Console.WriteLine($"[DEBUG] Query parameters: {string.Join(", ", queryParams.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
+
+            // Check for error parameters
+            if (queryParams.ContainsKey("error"))
+            {
+                var error = queryParams["error"];
+                var errorDescription = queryParams.ContainsKey("error_description") ? queryParams["error_description"] : "No additional details.";
+                Console.WriteLine($"[DEBUG] Callback error: {error}, Description: {errorDescription}");
+                return BadRequest($"Authentication failed: {error}. {errorDescription}");
+            }
+
+            // Get the session requisition ID
+            var sessionRequisitionId = HttpContext.Session.GetString("RequisitionId");
+            Console.WriteLine($"[DEBUG] Session requisition ID: {sessionRequisitionId}");
+
+            // Get the callback requisition ID
+            string callbackRequisitionId = null;
+            if (queryParams.ContainsKey("ref"))
+                callbackRequisitionId = queryParams["ref"];
+            else if (queryParams.ContainsKey("requisitionId"))
+                callbackRequisitionId = queryParams["requisitionId"];
+            else if (queryParams.ContainsKey("requisition"))
+                callbackRequisitionId = queryParams["requisition"];
+            else
+                Console.WriteLine($"[DEBUG] No known requisition ID parameter found in callback. Available parameters: {string.Join(", ", queryParams.Keys)}");
+
+            if (!string.IsNullOrEmpty(callbackRequisitionId))
+                Console.WriteLine($"[DEBUG] Callback requisition ID: {callbackRequisitionId}");
+
+            if (string.IsNullOrEmpty(sessionRequisitionId) && string.IsNullOrEmpty(callbackRequisitionId))
+            {
+                Console.WriteLine("[DEBUG] No requisition ID found in session or callback.");
+                return BadRequest("Requisition ID is missing from both session and callback URL.");
+            }
+
+            // Use session requisition ID
+            string requisitionId = sessionRequisitionId ?? callbackRequisitionId;
+            Console.WriteLine($"[DEBUG] Using requisition ID: {requisitionId}");
+
+            try
+            {
+                Console.WriteLine($"[DEBUG] Processing requisition ID: {requisitionId}");
+                var (accounts, status) = await _openBankingService.GetAccountsByRequisitionIdAsync(requisitionId);
+                Console.WriteLine($"[DEBUG] Requisition {requisitionId} status: {status}");
+
+                if (status != "LN")
+                {
+                    Console.WriteLine($"[DEBUG] Requisition {requisitionId} not linked. Status: {status}");
+                    return BadRequest($"Requisition not linked. Status: {status}");
+                }
+
+                if (accounts == null || !accounts.Any())
+                {
+                    Console.WriteLine($"[DEBUG] No accounts found for requisition ID: {requisitionId}");
+                    return View("NoAccounts");
+                }
+
+                Console.WriteLine($"[DEBUG] Found {accounts.Count} accounts for requisition ID: {requisitionId}");
+
+                // Fetch account details to identify currencies
+                var accountDetailsList = new List<AccountDetails>();
+                foreach (var account in accounts)
+                {
+                    try
+                    {
+                        var details = await _openBankingService.GetAccountDetailsAsync(account.Id);
+                        accountDetailsList.Add(details);
+                        Console.WriteLine($"[DEBUG] Account {account.Id}: Currency={details.Currency}, IBAN={details.Iban}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[DEBUG] Failed to fetch details for account {account.Id}: {ex.Message}");
+                    }
+                }
+
+                // Option 1: Fetch transactions for GBP account only
+                //var gbpAccount = accountDetailsList.FirstOrDefault(a => a.Currency == "GBP");
+                var gbpAccount = accountDetailsList.FirstOrDefault(a => a.Currency == "EUR");
+
+                if (gbpAccount != null)
+                {
+                    var transactions = await _openBankingService.GetTransactionsByAccountIdAsync(gbpAccount.Id);
+                    if (transactions == null)
+                        return View("NoTransactions");
+
+                    var viewModel = new AccountTransactionsViewModel
+                    {
+                        AccountId = gbpAccount.Id,
+                        Currency = gbpAccount.Currency,
+                        Transactions = transactions,
+                        LastUpdated = transactions.Transactions.LastUpdated
+                    };
+
+                    var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked);
+                    viewModel.RiskSummary = riskSummary;
+                    viewModel.HighRiskTransactions = highRiskTransactions;
+
+                    Console.WriteLine($"[DEBUG] Risk analysis: Level={riskSummary.RiskLevel}, Alerts={riskSummary.RiskAlerts.Count}");
+                    //TempData["TransactionsViewModel"] = JsonSerializer.Serialize(viewModel);
+                    HttpContext.Session.SetString("TransactionsViewModel", JsonSerializer.Serialize(viewModel));
+                    return View("DisplayTransactions",viewModel);
+                    //return View("~/Views/Transactions/DisplayTransactions.cshtml", viewModel);
+                }
+                else
+                {
+                    Console.WriteLine("[DEBUG] No GBP account found.");
+                    // Fallback to first account if GBP not found
+                    var firstAccountId = accounts.First().Id;
+                    var transactions = await _openBankingService.GetTransactionsByAccountIdAsync(firstAccountId);
+                    if (transactions == null)
+                    {
+                        Console.WriteLine($"[DEBUG] No transactions found for fallback account ID: {firstAccountId}");
+                        return View("NoTransactions");
+                    }
+
+                    var firstAccountDetails = accountDetailsList.FirstOrDefault(a => a.Id == firstAccountId);
+                    var viewModel = new AccountTransactionsViewModel
+                    {
+                        AccountId = firstAccountId,
+                        Currency = firstAccountDetails?.Currency ?? "Unknown",
+                        Transactions = transactions
+                    };
+                    return View("~/Views/OpenBanking/Transactions.cshtml", viewModel);
+                }
+
+                // Option 2: Fetch transactions for all accounts (uncomment to use)
+                /*
+                var allAccountsTransactions = new List<AccountTransactionsViewModel>();
+                foreach (var account in accountDetailsList)
+                {
+                    try
+                    {
+                        var transactions = await _openBankingService.GetTransactionsByAccountIdAsync(account.Id);
+                        if (transactions != null)
+                        {
+                            allAccountsTransactions.Add(new AccountTransactionsViewModel
+                            {
+                                AccountId = account.Id,
+                                Currency = account.Currency,
+                                Transactions = transactions
+                            });
+                            Console.WriteLine($"[DEBUG] Fetched transactions for account {account.Id} (Currency: {account.Currency})");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG] No transactions found for account {account.Id}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[DEBUG] Failed to fetch transactions for account {account.Id}: {ex.Message}");
+                    }
+                }
+
+                if (!allAccountsTransactions.Any())
+                {
+                    Console.WriteLine("[DEBUG] No transactions found for any accounts.");
+                    return View("NoTransactions");
+                }
+
+                return View("Transactions", allAccountsTransactions);
+                */
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("404"))
+            {
+                Console.WriteLine($"[DEBUG] 404 Error for requisition ID {requisitionId}: {ex.Message}");
+                return StatusCode(404, $"Requisition ID {requisitionId} not found.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] Error processing requisition ID {requisitionId}: {ex.Message}\nStack Trace: {ex.StackTrace}");
+                return StatusCode(500, $"Error processing requisition: {ex.Message}");
+            }
+        }
+
+
+        public IActionResult DisplayTransactions()
+        {
+            var viewModelJson = HttpContext.Session.GetString("TransactionsViewModel");
+            if (string.IsNullOrEmpty(viewModelJson))
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var viewModel = JsonSerializer.Deserialize<AccountTransactionsViewModel>(viewModelJson, options);
+                if (viewModel == null)
+                {
+                    Console.WriteLine("[DEBUG] Failed to deserialize TransactionsViewModel from TempData.");
+                    return StatusCode(500, "Failed to load transaction data.");
+                }
+
+                Console.WriteLine($"[DEBUG] Rendering Transactions view for account {viewModel.AccountId} (Currency: {viewModel.Currency})");
+                Console.WriteLine($"[DEBUG] Risk Summary: Level={viewModel.RiskSummary.RiskLevel}, Inflows={viewModel.RiskSummary.TotalInflows}, Outflows={viewModel.RiskSummary.TotalOutflows}, Net={viewModel.RiskSummary.NetBalance}");
+                return View("DisplayTransactions", viewModel);
+            }
+
+            Console.WriteLine("[DEBUG] No TransactionsViewModel found in TempData.");
+            return BadRequest("No transaction data available.");
+        }
+
+        //public async Task<IActionResult> ShowTransactions(string accountId)
+        //{
+        //    if (string.IsNullOrEmpty(accountId))
+        //        return BadRequest("Account ID is required");
+
+        //    var transactionsResponse = await _openBankingService.GetTransactionsByAccountIdAsync(accountId);
+
+        //    // You could pass the booked transactions to the view
+        //    return View("Transactions", transactionsResponse.Transactions.Booked);
+        //}
+
+    }
+
+}

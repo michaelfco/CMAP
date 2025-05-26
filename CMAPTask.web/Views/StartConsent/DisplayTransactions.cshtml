@@ -1,0 +1,242 @@
+﻿@using Microsoft.AspNetCore.Html
+@model CMAPTask.web.ViewModel.AccountTransactionsViewModel
+
+@functions {
+    public string FormatDateSafe(string dateStr, string format = "dd MMM yyyy")
+    {
+        if (DateTime.TryParse(dateStr, out var date))
+            return date.ToString(format);
+        return dateStr ?? "N/A";
+    }
+}
+
+<h2>Transactions for Account (@Model.Currency)</h2>
+<p>Account ID: @Model.AccountId</p>
+<p>Last Updated: @Model.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss")</p>
+
+<h3>Risk Summary</h3>
+<div style="display: flex; align-items: flex-start; gap: 30px;">
+    <div class="risk-summary" style="flex: 1;">
+        <p><strong>Risk Level:</strong> @Model.RiskSummary.RiskLevel</p>
+        <p><strong>Total Inflows:</strong> @Model.RiskSummary.TotalInflows.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+        <p><strong>Total Outflows:</strong> @Model.RiskSummary.TotalOutflows.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+        <p><strong>Net Balance:</strong> @Model.RiskSummary.NetBalance.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+        <p><strong>High-Value Transactions:</strong> @Model.RiskSummary.HighValueTransactionCount</p>
+
+        <p><strong>Total Rent:</strong> @Model.RiskSummary.TotalRent.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+        <p><strong>Total Gambling:</strong> @Model.RiskSummary.TotalGambling.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+        <p><strong>Total Benefits:</strong> @Model.RiskSummary.TotalBenefits.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+        <p><strong>Total High-Risk Merchants:</strong> @Model.RiskSummary.TotalHighRiskMerchant.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+
+        <p><strong>Period Analyzed:</strong> @(DateTime.Today.AddDays(-90).ToString("dd MMM yyyy")) - @(DateTime.Today.ToString("dd MMM yyyy"))</p>
+
+        <p>
+            <strong>Affordability:</strong>
+            <span class="@(Model.RiskSummary.AffordabilityAssessment.StartsWith("✅") ? "text-success" : "text-danger")">
+                @Model.RiskSummary.AffordabilityAssessment
+            </span>
+        </p>
+
+        <p>
+            <strong>Insolvency Risk:</strong>
+            <span class="@(Model.RiskSummary.InsolvencyRisk.StartsWith("✅") ? "text-success" : "text-danger")">
+                @Model.RiskSummary.InsolvencyRisk
+            </span>
+        </p>
+
+        @if (Model.RiskSummary.RiskAlerts.Any())
+        {
+            <p><strong>Alerts:</strong></p>
+            <ul>
+                @foreach (var alert in Model.RiskSummary.RiskAlerts)
+                {
+                    <li>@alert</li>
+                }
+            </ul>
+        }
+    </div>
+
+    <div style="flex: 0 0 450px;">
+        <canvas id="riskPieChart" width="450" height="450"></canvas>
+    </div>
+</div>
+
+@if (Model.Transactions.Transactions.Booked.Any() || Model.Transactions.Transactions.Pending.Any())
+{
+    @if (Model.Transactions.Transactions.Booked.Any())
+    {
+        <h3>Booked Transactions (@Model.Transactions.Transactions.Booked.Count())</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Party</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var transaction in Model.Transactions.Transactions.Booked)
+                {
+                    <tr class="@(Model.HighRiskTransactions.Contains(transaction) ? "high-risk" : "")">
+                        <td>@transaction.TransactionId</td>
+                        <td>@FormatDateSafe(transaction.BookingDate)</td>
+                        <td>
+                            @{
+                                decimal amount;
+                                var isParsed = decimal.TryParse(transaction.TransactionAmount.Amount, out amount);
+                            }
+                            @(isParsed ? amount.ToString("C", new System.Globalization.CultureInfo("en-GB")) : transaction.TransactionAmount.Amount)
+                            @transaction.TransactionAmount.Currency
+                        </td>
+                        <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
+                        <td>@transaction.RemittanceInformationUnstructured</td>
+                        <td>@transaction.ProprietaryBankTransactionCode</td>
+                        <td>
+                            @(Model.HighRiskTransactions.Contains(transaction)
+                                ? new HtmlString("<span class='badge badge-danger'>High Risk</span>")
+                                : new HtmlString("<span class='badge badge-success'>Low Risk</span>"))
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (Model.Transactions.Transactions.Pending.Any())
+    {
+        <h3>Pending Transactions (@Model.Transactions.Transactions.Pending.Count())</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Party</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var transaction in Model.Transactions.Transactions.Pending)
+                {
+                    <tr class="@(Model.HighRiskTransactions.Contains(transaction) ? "high-risk" : "")">
+                        <td>@transaction.TransactionId</td>
+                        <td>@FormatDateSafe(transaction.BookingDate)</td>
+                        <td>
+                            @{
+                                decimal amount;
+                                var isParsed = decimal.TryParse(transaction.TransactionAmount.Amount, out amount);
+                            }
+                            @(isParsed ? amount.ToString("C", new System.Globalization.CultureInfo("en-GB")) : transaction.TransactionAmount.Amount)
+                            @transaction.TransactionAmount.Currency
+                        </td>
+                        <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
+                        <td>@transaction.RemittanceInformationUnstructured</td>
+                        <td>@transaction.ProprietaryBankTransactionCode</td>
+                        <td>
+                            @(Model.HighRiskTransactions.Contains(transaction)
+                                ? new HtmlString("<span class='badge badge-danger'>High Risk</span>")
+                                : new HtmlString("<span class='badge badge-success'>Low Risk</span>"))
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+else
+{
+    <p>No transactions found for this account.</p>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('riskPieChart').getContext('2d');
+        const riskPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Rent', 'Gambling', 'Benefits', 'High-Risk Merchants'],
+                datasets: [{
+                    data: [
+        @Model.RiskSummary.TotalRent,
+        @Model.RiskSummary.TotalGambling,
+        @Model.RiskSummary.TotalBenefits,
+        @Model.RiskSummary.TotalHighRiskMerchant
+                            ],
+                    backgroundColor: [
+                        '#007bff',
+                        '#dc3545',
+                        '#ffc107',
+                        '#6f42c1'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let value = context.raw.toLocaleString('en-GB', { style: 'currency', currency: 'GBP' });
+                                return context.label + ': ' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #f2f2f2;
+        }
+
+    .risk-summary {
+        padding: 10px;
+       /*  border: 1px solid #ddd;
+        border-radius: 5px; */
+    }
+
+    .high-risk {
+        background-color: #ffe6e6;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        color: white;
+        display: inline-block;
+    }
+
+    .badge-danger {
+        background-color: #dc3545;
+    }
+
+    .badge-success {
+        background-color: #28a745;
+    }
+</style>

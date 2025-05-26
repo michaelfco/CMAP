@@ -26,6 +26,7 @@ namespace CMAPTask.web.Controllers
         //SOLID - Single Responsability
         public async Task<IActionResult> Index()
         {
+            return RedirectToAction("Index", "Customer");
             ViewData["Title"] = "Timesheet";
             var data = await _service.GetEntriesAsync();  
             //use automapper to map to viewmodel

@@ -1,0 +1,89 @@
+﻿@model CMAPTask.web.ViewModel.AccountTransactionsViewModel
+
+<h2>Transactions for Account (@Model.Currency)</h2>
+<p>Account ID: @Model.AccountId</p>
+<p>Last Updated: @Model.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss")</p>
+
+@if (Model.Transactions.Transactions.Booked.Any() || Model.Transactions.Transactions.Pending.Any())
+{
+    @if (Model.Transactions.Transactions.Booked.Any())
+    {
+        <h3>Booked Transactions</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Party</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var transaction in Model.Transactions.Transactions.Booked)
+                {
+                    <tr>
+                        <td>@transaction.TransactionId</td>
+                        <td>@transaction.BookingDate</td>
+                        <td>@transaction.TransactionAmount.Amount @transaction.TransactionAmount.Currency</td>
+                        <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
+                        <td>@transaction.RemittanceInformationUnstructured</td>
+                        <td>@transaction.ProprietaryBankTransactionCode</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (Model.Transactions.Transactions.Pending.Any())
+    {
+        <h3>Pending Transactions</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Party</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var transaction in Model.Transactions.Transactions.Pending)
+                {
+                    <tr>
+                        <td>@transaction.TransactionId</td>
+                        <td>@transaction.BookingDate</td>
+                        <td>@transaction.TransactionAmount.Amount @transaction.TransactionAmount.Currency</td>
+                        <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
+                        <td>@transaction.RemittanceInformationUnstructured</td>
+                        <td>@transaction.ProprietaryBankTransactionCode</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+else
+{
+    <p>No transactions found for this account.</p>
+}
+
+<style>
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #f2f2f2;
+        }
+</style>

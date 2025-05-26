@@ -1,0 +1,23 @@
+﻿@{
+    ViewData["Title"] = "Scan to Continue";
+    var link = ViewBag.BankLink as string;
+}
+
+<h2>Scan this QR Code to Continue in Mobile Banking App</h2>
+
+@if (!string.IsNullOrEmpty(link))
+{
+    <div style="margin: 30px 0; text-align: center;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=@Uri.EscapeDataString(link)" alt="Bank QR Code" />
+    </div>
+
+    <p style="text-align: center;">Or click below to continue on this device:</p>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="@link" class="btn btn-primary">Continue on This Device</a>
+    </div>
+}
+else
+{
+    <p>Error: Missing bank redirect link.</p>
+}
