@@ -1,5 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Html
 @model CMAPTask.web.ViewModel.AccountTransactionsViewModel
+@{
+    Layout = "_LayoutNew";
+}
 
 @functions {
     public string FormatDateSafe(string dateStr, string format = "dd MMM yyyy")
