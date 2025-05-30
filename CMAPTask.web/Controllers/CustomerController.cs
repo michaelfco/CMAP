@@ -1,7 +1,9 @@
 ﻿using CMAPTask.Domain.Entities.OB;
+using CMAPTask.Infrastructure;
 using CMAPTask.Infrastructure.Context;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using OpenBanking.Application.Interfaces;
 using OpenBanking.Domain.Entities.OB;
 using OpenBanking.Domain.Enums;
@@ -16,14 +18,16 @@ namespace CMAPTask.web.Controllers
         private readonly OBDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICompanyEndUserRepository _companyUserRepository;
+        private readonly OBSettings _settings;
 
 
 
-        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor, ICompanyEndUserRepository companyUserRepository)
+        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor, ICompanyEndUserRepository companyUserRepository, IOptions<OBSettings> options)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _companyUserRepository = companyUserRepository;
+            _settings = options.Value;
         }
 
 
@@ -84,10 +88,17 @@ namespace CMAPTask.web.Controllers
 
             var id = await _companyUserRepository.SaveAsync(entity);
 
+            var urlToSend = $"{_settings.SiteBaseURL}OpenBanking/ShowInstitutions?u={id}&c={userId}";
+
+            TempData["MsgSuccess"] = "Customer details submitted successfully!";
             TempData["CustomerDetails"] = System.Text.Json.JsonSerializer.Serialize(details);
 
-            // You can return JSON to trigger a redirect via JS
-            return Json(new { redirectUrl = Url.Action("ShowInstitutions", "OpenBanking") });
+            return Json(new
+            {
+                success = true,
+                message = "Customer details submitted successfully!"
+            });
+           
         }
     }
 }

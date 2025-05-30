@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static OpenBanking.Domain.Enums.Enum;
+using System.Runtime.Serialization;
 
 namespace OpenBanking.Domain.Entities.OB
 {
@@ -41,9 +42,7 @@ namespace OpenBanking.Domain.Entities.OB
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public Status Status { get; set; }
-
-        // Navigation property
-        public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+   
         public int? IsDeleted { get; set; }
         public DateTime? DeletedAt { get; set; }
     }

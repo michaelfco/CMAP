@@ -210,7 +210,21 @@
                 <!-- 404 Start -->
                 <div class="container-fluid pt-4 px-4">
                     @*  <div class="row vh-100  rounded align-items-center justify-content-center mx-0"> *@
+
+                    <div class="alert alert-success divSuccess d-none" id="divSuccess" align="center" role="alert">
+                        <span id="spanSuccess">
+                            @ViewBag.MsgSuccess
+                        </span>
+                    </div>
+
+                    <div class="divError alert alert-danger d-none" id="divError" align="center" role="alert">
+                        <span id="spanError">
+                            @ViewBag.MsgError                           
+                        </span>
+                    </div>
+
                     <div class="row vh-100  rounded mx-0">
+                        
                         @RenderBody()
 
                     </div>

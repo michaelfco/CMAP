@@ -1,23 +1,35 @@
 ﻿@{
+    Layout = "_LayoutClean";
     ViewData["Title"] = "Scan to Continue";
     var link = ViewBag.BankLink as string;
 }
 
-<h2>Scan this QR Code to Continue in Mobile Banking App</h2>
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: white; /* ensures no default background */
+    }
+</style>
 
-@if (!string.IsNullOrEmpty(link))
-{
-    <div style="margin: 30px 0; text-align: center;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=@Uri.EscapeDataString(link)" alt="Bank QR Code" />
+<div class="container-xxl d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="text-center">
+        <h2>Scan this QR Code to Continue in Mobile Banking App</h2>
+
+        @if (!string.IsNullOrEmpty(link))
+        {
+            <div class="my-4">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=@Uri.EscapeDataString(link)" alt="Bank QR Code" />
+            </div>
+
+            <p>Or click below to continue on this device:</p>
+
+            <a href="@link" class="btn btn-primary mt-2">Continue on This Device</a>
+        }
+        else
+        {
+            <p>Error: Missing bank redirect link.</p>
+        }
     </div>
-
-    <p style="text-align: center;">Or click below to continue on this device:</p>
-
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="@link" class="btn btn-primary">Continue on This Device</a>
-    </div>
-}
-else
-{
-    <p>Error: Missing bank redirect link.</p>
-}
+</div>

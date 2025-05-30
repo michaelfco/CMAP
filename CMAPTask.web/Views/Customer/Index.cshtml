@@ -137,6 +137,7 @@
 
     <script>
         // Load modal content by URL and bind submit handler after load
+        // Load modal content by URL and bind submit handler after load
         function bindFormSubmit() {
             const form = document.getElementById('newRequestForm');
             if (!form) return;
@@ -166,8 +167,19 @@
                         return response.text();
                     })
                     .then(data => {
-                        if (typeof data === 'object' && data.redirectUrl) {
-                            window.location.href = data.redirectUrl;
+                        if (typeof data === 'object' && data.success) {
+                            // Close the modal
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('lightModal'));
+                            modal.hide();
+                            // Show success message
+                            const successDiv = document.getElementById('divSuccess');
+                            const successSpan = document.getElementById('spanSuccess');
+                            successSpan.textContent = data.message;
+                            successDiv.classList.remove('d-none');
+                            // Reload the page to refresh data
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000); // Delay to allow user to see the success message
                         } else {
                             const modalContent = document.getElementById('modalContent');
                             modalContent.innerHTML = data;
@@ -178,6 +190,8 @@
                     .catch(error => console.error('Error submitting form:', error));
             });
         }
+
+
 
         // Call this after loading partial content:
         function loadModalContent(url) {
@@ -199,6 +213,9 @@
                     console.error('Error loading modal content:', error);
                 });
         }
+
+
+
     </script>
 
 

@@ -17,8 +17,8 @@ namespace CMAPTask.web.Controllers
         {
            return View();
         }
-        
-        public async Task<IActionResult> ShowInstitutions()
+        [HttpGet]
+        public async Task<IActionResult> ShowInstitutions(string u, string c)
         {
             var token = await _openBankingService.UseTokenAsync();
             var institutions = await _openBankingService.GetInstitutionsAsync(token.Access, "gb");
