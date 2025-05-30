@@ -2,6 +2,7 @@
 using CMAPTask.Infrastructure.Context;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OpenBanking.Application.Interfaces;
 using OpenBanking.Domain.Entities.OB;
 using OpenBanking.Domain.Enums;
 using OpenBanking.Infrastructure.Extensions;
@@ -14,17 +15,21 @@ namespace CMAPTask.web.Controllers
     {
         private readonly OBDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICompanyEndUserRepository _companyUserRepository;
 
 
-        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor)
+
+        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor, ICompanyEndUserRepository companyUserRepository)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _companyUserRepository = companyUserRepository;
         }
 
 
         [Authorize(Roles = Constants.Roles.Admin)]
-        public IActionResult Index()
+        [Route("Customer/dashboard")]
+        public async Task<IActionResult> Index()
         {
             var userIdString = _httpContextAccessor.HttpContext?.User.FindFirst("UserId")?.Value;
 
@@ -33,23 +38,25 @@ namespace CMAPTask.web.Controllers
                 return Unauthorized();
             }
 
-            // Query the list for this user
-            var users = _context.CompanyEndUsers
-                .Where(e => e.UserId == userId && (e.IsDeleted == null || e.IsDeleted == 0))
-                .OrderByDescending(e => e.CreatedAt)
-                .Select(e => new RecentUserViewModel
-                {
-                    FirstName = e.FirstName,
-                    LastName = e.LastName,
-                    Email = e.Email,
-                    PhoneNumber = e.PhoneNumber,
-                    CreatedAt = e.CreatedAt
-                })
-                .ToList();
+            var users = await _companyUserRepository.GetAllAsync(userId, null);
 
-            return View(users);
+            var model = users.Select(e => new RecentUserViewModel
+            {
+                FirstName = e.FirstName,
+                LastName = e.LastName,
+                Email = e.Email,
+                PhoneNumber = e.PhoneNumber,
+                CreatedAt = e.CreatedAt,
+                Status = e.Status,
+            }).OrderByDescending(a => a.CreatedAt).ToList();
+
+            return View(model);
         }
-    
+
+        public IActionResult NewRequest()
+        {
+            return PartialView("_NewRequestPartial", new CustomerDetails());
+        }
 
         // Receive form submission
         [HttpPost]
@@ -57,30 +64,30 @@ namespace CMAPTask.web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View("EnterDetails", details);
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return PartialView("_NewRequestPartial", details);
+
+                return RedirectToAction("NewRequest");
             }
+
             var userId = User.GetUserId();
 
-            var newEndUser = new CompanyEndUser
+            var entity = new CompanyEndUser
             {
-                EndUserId = Guid.NewGuid(),
                 UserId = userId,
                 FirstName = details.FirstName,
                 LastName = details.LastName,
                 Email = details.Email,
                 PhoneNumber = details.PhoneNumber,
-                CreatedAt = DateTime.UtcNow
+                Status = Status.pending,
             };
 
-            _context.CompanyEndUsers.Add(newEndUser);
-            await _context.SaveChangesAsync();
+            var id = await _companyUserRepository.SaveAsync(entity);
 
-            var id = newEndUser.EndUserId.ToString();
-
-            // TODO: Save details to DB or session, then redirect to institutions page
             TempData["CustomerDetails"] = System.Text.Json.JsonSerializer.Serialize(details);
 
-            return RedirectToAction("ShowInstitutions", "OpenBanking");
+            // You can return JSON to trigger a redirect via JS
+            return Json(new { redirectUrl = Url.Action("ShowInstitutions", "OpenBanking") });
         }
     }
 }

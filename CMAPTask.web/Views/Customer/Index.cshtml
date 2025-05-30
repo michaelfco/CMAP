@@ -1,4 +1,5 @@
-﻿@* @model CMAPTask.Domain.Entities.OB.CustomerDetails *@
+﻿@using static OpenBanking.Domain.Enums.Enum
+@* @model CMAPTask.Domain.Entities.OB.CustomerDetails *@
 @model List<OpenBanking.web.ViewModel.RecentUserViewModel>
 @{
     Layout = "_LayoutNew";
@@ -9,75 +10,201 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }
-
-<div class="container-fluid pt-4 px-4">
-    <div class="bg-light text-center rounded p-4">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <h6 class="mb-0">Recent Requests</h6>
-            <a href="">Show All</a>
-        </div>
-        <div class="table-responsive">
-            <table class="table text-start align-middle table-bordered table-hover mb-0">
-                <thead>
-                    <tr class="text-dark">
-                        <th scope="col"><input class="form-check-input" type="checkbox"></th>
-                        <th scope="col">FullName</th>
-                        <th scope="col">CreatedAt</th>
-                        <th scope="col">PhoneNumber</th>
-                        <th scope="col">Email</th>
-                       
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model)
-                    {
-                        <tr>
-                            <td><input class="form-check-input" type="checkbox"></td>
-                            <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>                           
-                            <td>@($"{user.FirstName} {user.LastName}")</td>                          
-                            <td>@user.PhoneNumber</td>
-                            <td>@user.Email</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+<div class="container-fluid pt-2 px-4">
+    <div class="row d-flex justify-content-end">
+        <button type="button"
+                class="btn btn-primary m-2"
+                style="width: 150px;"
+                data-bs-toggle="modal"
+                data-bs-target="#lightModal"
+                onclick="loadModalContent('/Customer/NewRequest')">
+            New Request
+        </button>
     </div>
-</div>
-
-@* <form asp-action="SubmitDetails" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="row g-4">
-        <div class="col-sm-12 col-xl-6">
-            <div class="bg-light rounded h-100 p-4">
-                <h6 class="mb-4">Enter Customer's Details</h6>
-
-                <div class="form-floating mb-3">
-                    <input asp-for="FirstName" class="form-control" placeholder="First Name" />
-                    <label asp-for="FirstName">First Name</label>
-                    <span asp-validation-for="FirstName" class="text-danger"></span>
+        <div class="col-sm-6 col-xl-3">
+            <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                <i class="fa fa-chart-line fa-3x text-primary"></i>
+                <div class="ms-3">
+                    <p class="mb-2">Pending</p>
+                    <h6 class="mb-0">@Model.Where(a => a.Status == Status.pending).Count()</h6>
                 </div>
-
-                <div class="form-floating mb-3">
-                    <input asp-for="LastName" class="form-control" placeholder="Last Name" />
-                    <label asp-for="LastName">Last Name</label>
-                    <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                <i class="fa fa-chart-bar fa-3x text-primary"></i>
+                <div class="ms-3">
+                    <p class="mb-2">Complete</p>
+                    <h6 class="mb-0">@Model.Where(a => a.Status == Status.Complete).Count()</h6>
                 </div>
-
-                <div class="form-floating mb-3">
-                    <input asp-for="Email" type="email" class="form-control" placeholder="name@example.com" />
-                    <label asp-for="Email">Email address</label>
-                    <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                <i class="fa fa-chart-area fa-3x text-primary"></i>
+                <div class="ms-3">
+                    <p class="mb-2">Total</p>
+                    <h6 class="mb-0">@Model.Count()</h6>
                 </div>
-
-                <div class="form-floating mb-3">
-                    <input asp-for="PhoneNumber" class="form-control" placeholder="Phone Number" />
-                    <label asp-for="PhoneNumber">Phone Number</label>
-                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                <i class="fa fa-chart-pie fa-3x text-primary"></i>
+                <div class="ms-3">
+                    <p class="mb-2">Total Revenue</p>
+                    <h6 class="mb-0">$1234</h6>
                 </div>
-
-                <button type="submit" class="btn btn-primary">Send Request</button>
             </div>
         </div>
     </div>
-</form> *@
+
+    <div class="row g-4 pt-4">
+        <div class="col-sm-12 col-xl-6">
+            <div class="bg-light rounded h-100 p-4">
+                <h6 class="mb-4">Last Pending Requests</h6>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>                           
+                            <th scope="col">Email</th>
+                            <th scope="col">Phone</th>
+                            <th scope="col">CreatedAt</th>                           
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Where(a => a.Status == Status.pending))
+                        {
+                            <tr>
+                                <td><input class="form-check-input" type="checkbox"></td>
+                                <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>@($"{user.FirstName} {user.LastName}")</td>
+                                <td>@user.PhoneNumber</td>
+                                <td>@user.Email</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-6">
+            <div class="bg-light rounded h-100 p-4">
+                <h6 class="mb-4">Last Completed Request</h6>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Phone</th>
+                            <th scope="col">CreatedAt</th>
+                            <th scope="col">View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Where(a => a.Status == Status.Complete))
+                        {
+                            <tr>
+                                <td><input class="form-check-input" type="checkbox"></td>
+                                <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>@($"{user.FirstName} {user.LastName}")</td>
+                                <td>@user.PhoneNumber</td>
+                                <td>@user.Email</td>
+                                <td><a href="#">View</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal fade" id="lightModal" tabindex="-1" aria-labelledby="lightModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="lightModalLabel">New Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalContent">
+                    <!-- Spinner initially or empty -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load modal content by URL and bind submit handler after load
+        function bindFormSubmit() {
+            const form = document.getElementById('newRequestForm');
+            if (!form) return;
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                if (!$(form).valid()) {
+                    // Validation failed, do not submit
+                    return;
+                }
+
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json();
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        if (typeof data === 'object' && data.redirectUrl) {
+                            window.location.href = data.redirectUrl;
+                        } else {
+                            const modalContent = document.getElementById('modalContent');
+                            modalContent.innerHTML = data;
+                            $.validator.unobtrusive.parse(modalContent);
+                            bindFormSubmit();
+                        }
+                    })
+                    .catch(error => console.error('Error submitting form:', error));
+            });
+        }
+
+        // Call this after loading partial content:
+        function loadModalContent(url) {
+            const contentDiv = document.getElementById('modalContent');
+            contentDiv.innerHTML = '<div class="text-center p-3"><div class="spinner-border" role="status"></div></div>';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not OK');
+                    return response.text();
+                })
+                .then(html => {
+                    contentDiv.innerHTML = html;
+                    $.validator.unobtrusive.parse(contentDiv);
+                    bindFormSubmit();
+                })
+                .catch(error => {
+                    contentDiv.innerHTML = '<div class="text-danger">Error loading content</div>';
+                    console.error('Error loading modal content:', error);
+                });
+        }
+    </script>
+
+
+
+
+
+
+
+ 

@@ -17,7 +17,7 @@ namespace CMAPTask.web.Controllers
         //SOLID - Single Responsability
         public async Task<IActionResult> Index()
         {
-            return RedirectToAction("Index", "Customer");          
+            return RedirectToAction("dashboard", "Customer");          
         }
 
         //SOLID - Open/Closed Principle

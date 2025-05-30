@@ -5,6 +5,9 @@ using CMAPTask.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OpenBanking.Application.Interfaces;
+using OpenBanking.Domain.Interfaces;
+using OpenBanking.Infrastructure.Repository;
 
 namespace CMAPTask.Infrastructure.Extensions;
 
@@ -25,23 +28,10 @@ public static class ApplicationServiceExtension
         services.AddScoped<IOpenBankingService, OpenBankingService>();
         services.AddScoped<OBTokenService>();
         services.AddScoped<IRiskAnalyzer, RiskAnalyzer>();
+        services.AddScoped<IDapperGenericRepository, DapperGenericRepository>();
+        services.AddScoped<ICompanyEndUserRepository, CompanyEndUserRepository>();
         
         return services;
 
-
-        //DP - Dependency Injection
-        //        services.AddDbContext<CMAPDbContext>(opt =>
-        //        {
-        //            //opt.UseSqlServer(config.GetConnectionString("DefaultConnection"));
-        //        });
-
-        //        services.AddDbContext<CMAPDbContext>(options =>
-        //options.UseSqlite("Data Source=CmapTask.db"));
-
-        //        //DP - Register service and repository Dependency Injection
-        //        services.AddScoped<ITimesheetRepository, TimesheetRepository>();
-        //        services.AddScoped<ITimesheetService,TimesheetService>();
-
-        //        return services;
     }
 }

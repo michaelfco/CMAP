@@ -36,6 +36,7 @@ namespace OpenBanking.web.Controllers
             var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Email),
+            new Claim("DisplayName", user.CompanyName),
             new Claim("UserId", user.UserId.ToString()),
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Role, user.Role.ToString()) // Optional
