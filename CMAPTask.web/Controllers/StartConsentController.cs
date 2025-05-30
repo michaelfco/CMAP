@@ -23,7 +23,7 @@ namespace CMAPTask.web.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Consent(string institutionId)
+        public async Task<IActionResult> Consent(string institutionId, string u, string c)
         {
             institutionId = "SANDBOXFINANCE_SFIN0000";
             if (string.IsNullOrEmpty(institutionId))
@@ -178,6 +178,11 @@ namespace CMAPTask.web.Controllers
                         Transactions = transactions,
                         LastUpdated = transactions.Transactions.LastUpdated
                     };
+
+                    var transactionsJson = JsonSerializer.Serialize(transactions, new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    });
 
                     var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked);
                     viewModel.RiskSummary = riskSummary;

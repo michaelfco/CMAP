@@ -12,5 +12,6 @@ namespace OpenBanking.Application.Interfaces
     {
         Task<Guid> SaveAsync(CompanyEndUser user);
         Task<IEnumerable<CompanyEndUser>> GetAllAsync(Guid userId, Status? status);
+        Task<CompanyEndUser> GetByEndUserIdAndPendingAsync(Guid endUserId);
     }
 }

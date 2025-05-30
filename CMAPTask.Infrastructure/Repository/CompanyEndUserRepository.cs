@@ -49,5 +49,19 @@ namespace OpenBanking.Infrastructure.Repository
             var result = await _repo.QueryAsync<CompanyEndUser>(sql.ToString(), parameters);
             return result.ToList();
         }
+
+        public async Task<CompanyEndUser> GetByEndUserIdAndPendingAsync(Guid endUserId)
+        {
+            var sql = @"SELECT * FROM CompanyEndUsers 
+                       WHERE EndUserId = @endUserId 
+                       AND Status = @status 
+                       AND (IsDeleted IS NULL OR IsDeleted = 0)";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("endUserId", endUserId);
+            parameters.Add("status", Status.pending);
+
+            return await _repo.QueryFirstOrDefaultAsync<CompanyEndUser>(sql, parameters);
+        }
     }
 }
