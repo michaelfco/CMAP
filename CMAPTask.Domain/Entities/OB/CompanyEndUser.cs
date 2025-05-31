@@ -17,10 +17,7 @@ namespace OpenBanking.Domain.Entities.OB
         public Guid EndUserId { get; set; }
 
         [Required]
-        public Guid UserId { get; set; }
-
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public Guid UserId { get; set; }        
 
         [StringLength(100)]
         public string? FirstName { get; set; }

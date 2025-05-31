@@ -15,10 +15,7 @@ namespace OpenBanking.Domain.Entities.OB
         public Guid ConfigId { get; set; }
 
         [Required]
-        public Guid UserId { get; set; }
-
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public Guid? UserId { get; set; }       
 
         [Required]
         [StringLength(500)]
@@ -36,7 +33,7 @@ namespace OpenBanking.Domain.Entities.OB
 
         public DateTime? TokenExpiresAt { get; set; }
 
-        [Required]
+       
         [StringLength(50)]
         public string Environment { get; set; }
 

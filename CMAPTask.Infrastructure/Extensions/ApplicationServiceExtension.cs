@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenBanking.Application.Interfaces;
 using OpenBanking.Domain.Interfaces;
 using OpenBanking.Infrastructure.Repository;
+using OpenBanking.Infrastructure.Services;
 
 namespace CMAPTask.Infrastructure.Extensions;
 
@@ -30,7 +31,10 @@ public static class ApplicationServiceExtension
         services.AddScoped<IRiskAnalyzer, RiskAnalyzer>();
         services.AddScoped<IDapperGenericRepository, DapperGenericRepository>();
         services.AddScoped<ICompanyEndUserRepository, CompanyEndUserRepository>();
-        
+        services.AddScoped<ITransactionsRepository, TransactionsRepository>();
+
+        services.AddTransient<EmailService>();
+
         return services;
 
     }

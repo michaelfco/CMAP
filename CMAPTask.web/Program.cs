@@ -4,6 +4,7 @@ using CMAPTask.Infrastructure;
 using CMAPTask.Infrastructure.Extensions;
 using CMAPTask.Infrastructure.Services;
 using CMAPTask.web;
+using OpenBanking.Domain.Entities.Model;
 using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,6 +56,7 @@ builder.Services.AddAuthentication("MyCookieAuth")
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();
 
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 var app = builder.Build();
 

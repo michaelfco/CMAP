@@ -75,7 +75,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var user in Model.Where(a => a.Status == Status.pending))
+                        @foreach (var user in Model.Where(a => a.Status == Status.pending).Take(6))
                         {
                             <tr>
                                 <td><input class="form-check-input" type="checkbox"></td>
@@ -104,7 +104,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var user in Model.Where(a => a.Status == Status.Complete))
+                        @foreach (var user in Model.Where(a => a.Status == Status.Complete).Take(6))
                         {
                             <tr>
                                 <td><input class="form-check-input" type="checkbox"></td>

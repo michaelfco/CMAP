@@ -1,4 +1,5 @@
-﻿using CMAPTask.Domain.Entities.OB;
+﻿using Castle.Core.Resource;
+using CMAPTask.Domain.Entities.OB;
 using CMAPTask.Infrastructure;
 using CMAPTask.Infrastructure.Context;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +9,7 @@ using OpenBanking.Application.Interfaces;
 using OpenBanking.Domain.Entities.OB;
 using OpenBanking.Domain.Enums;
 using OpenBanking.Infrastructure.Extensions;
+using OpenBanking.Infrastructure.Services;
 using OpenBanking.web.ViewModel;
 using static OpenBanking.Domain.Enums.Enum;
 
@@ -19,15 +21,17 @@ namespace CMAPTask.web.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICompanyEndUserRepository _companyUserRepository;
         private readonly OBSettings _settings;
+        private readonly EmailService _emailService;
 
 
 
-        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor, ICompanyEndUserRepository companyUserRepository, IOptions<OBSettings> options)
+        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor, ICompanyEndUserRepository companyUserRepository, IOptions<OBSettings> options, EmailService emailService)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _companyUserRepository = companyUserRepository;
             _settings = options.Value;
+            _emailService = emailService;
         }
 
 
@@ -90,6 +94,10 @@ namespace CMAPTask.web.Controllers
 
             var urlToSend = $"{_settings.SiteBaseURL}OpenBanking/ShowInstitutions?u={id}&c={userId}";
 
+            var htmlBody = GenerateConsentEmailHtml(details.FirstName, urlToSend, "https://www.sinailogistics.cl/wp-content/uploads/2021/10/sinai300.png");
+            await _emailService.SendEmailAsync(details.Email, "Please Provide Your Consent", htmlBody);
+
+
             TempData["MsgSuccess"] = "Customer details submitted successfully!";
             TempData["CustomerDetails"] = System.Text.Json.JsonSerializer.Serialize(details);
 
@@ -100,5 +108,99 @@ namespace CMAPTask.web.Controllers
             });
            
         }
+
+
+        public static string GenerateConsentEmailHtml(string customerName, string consentLink, string logoUrl)
+        {
+            return $@"
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset='UTF-8'>
+                        <style>
+                            body {{
+                                font-family: 'Segoe UI', sans-serif;
+                                background-color: #f8f9fa;
+                                padding: 20px;
+                                color: #333;
+                            }}
+                            .container {{
+                                background-color: #ffffff;
+                                max-width: 600px;
+                                margin: auto;
+                                padding: 30px;
+                                border-radius: 10px;
+                                box-shadow: 0 0 10px rgba(0,0,0,0.05);
+                            }}
+                            .logo {{
+                                text-align: center;
+                                margin-bottom: 20px;
+                            }}
+                            .logo img {{
+                                max-width: 150px;
+                            }}
+                            .header {{
+                                border-bottom: 1px solid #dee2e6;
+                                margin-bottom: 20px;
+                                text-align: center;
+                            }}
+                            .header h2 {{
+                                color: #0d6efd;
+                            }}
+                            .content p {{
+                                line-height: 1.6;
+                            }}
+                            .btn {{
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 12px 25px;
+                                background-color: #0d6efd;
+                                color: white !important;
+                                text-decoration: none;
+                                border-radius: 5px;
+                                font-weight: bold;
+                            }}
+                            .footer {{
+                                margin-top: 30px;
+                                font-size: 0.85em;
+                                color: #6c757d;
+                                text-align: center;
+                            }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class='container'>
+                            <div class='logo'>
+                                <img src='{logoUrl}' alt='Company Logo' />
+                            </div>
+                            <div class='header'>
+                                <h2>Action Required: Provide Your Consent</h2>
+                            </div>
+                            <div class='content'>
+                                <p>Dear {customerName},</p>
+
+                                <p>You’ve been invited to complete a request with us. Before we can proceed with the evaluation, we need your permission to securely access your financial data.</p>
+
+                                <p>This step is essential for us to analyze your information and provide you with the best possible offer.</p>
+
+                                <p>Please click the button below to provide your consent:</p>
+
+                                <a href='{consentLink}' class='btn'>Provide Consent</a>
+
+                                <p>If the button doesn’t work, copy and paste the following link into your browser:</p>
+                                <p><a href='{consentLink}'>{consentLink}</a></p>
+
+                                <p>Thank you for choosing us.</p>
+                                <p>Best regards,<br>Your Lending Partner</p>
+                            </div>
+                            <div class='footer'>
+                                <p>This email was sent automatically. Please do not reply to it.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>";
+        }
+
+
     }
 }

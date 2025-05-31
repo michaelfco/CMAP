@@ -4,6 +4,7 @@ using CMAPTask.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace OpenBanking.Infrastructure.Migrations
 {
     [DbContext(typeof(OBDbContext))]
-    partial class OBDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250531083906_add")]
+    partial class add
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -252,12 +255,6 @@ namespace OpenBanking.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AgreementId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ConsentId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -281,19 +278,18 @@ namespace OpenBanking.Infrastructure.Migrations
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("PeriodEnd")
+                    b.Property<DateTime>("PeriodEnd")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("PeriodStart")
+                    b.Property<DateTime>("PeriodStart")
                         .HasColumnType("datetime2");
-
-                    b.Property<Guid>("Reference")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("TransactionId");
+
+                    b.HasIndex("EndUserId");
 
                     b.ToTable("Transactions");
                 });
@@ -351,9 +347,6 @@ namespace OpenBanking.Infrastructure.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("UseCredentialId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
@@ -372,11 +365,13 @@ namespace OpenBanking.Infrastructure.Migrations
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.CompanyEndUser", b =>
                 {
-                    b.HasOne("OpenBanking.Domain.Entities.OB.User", null)
+                    b.HasOne("OpenBanking.Domain.Entities.OB.User", "User")
                         .WithMany("CompanyEndUsers")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.Credit", b =>
@@ -392,11 +387,13 @@ namespace OpenBanking.Infrastructure.Migrations
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.GoCardlessSetting", b =>
                 {
-                    b.HasOne("OpenBanking.Domain.Entities.OB.User", null)
+                    b.HasOne("OpenBanking.Domain.Entities.OB.User", "User")
                         .WithMany("GoCardlessSettings")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.RepositoryStorage", b =>
@@ -408,6 +405,17 @@ namespace OpenBanking.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("OpenBanking.Domain.Entities.OB.Transaction", b =>
+                {
+                    b.HasOne("OpenBanking.Domain.Entities.OB.CompanyEndUser", "EndUser")
+                        .WithMany()
+                        .HasForeignKey("EndUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EndUser");
                 });
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.User", b =>

@@ -49,6 +49,8 @@ namespace OpenBanking.Domain.Entities.OB
         public int? IsDeleted { get; set; }
         public DateTime? DeletedAt { get; set; }
 
+        public Guid? UseCredentialId { get; set; }
+
         // Navigation properties
         public virtual ICollection<CompanyEndUser> CompanyEndUsers { get; set; } = new List<CompanyEndUser>();
         public virtual ICollection<Credit> Credits { get; set; } = new List<Credit>();

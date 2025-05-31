@@ -1,9 +1,17 @@
 ﻿using CMAPTask.Application.Interfaces;
 using CMAPTask.Domain.Entities.OB;
+using CMAPTask.Infrastructure;
 using CMAPTask.web.ViewModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using OpenBanking.Application.Interfaces;
+using OpenBanking.Domain.Entities.OB;
+using OpenBanking.Infrastructure.Extensions;
+using OpenBanking.Infrastructure.Services;
 using System.Net.Http;
 using System.Text.Json;
+using static OpenBanking.Domain.Enums.Enum;
+using Transaction = OpenBanking.Domain.Entities.OB.Transaction;
 
 namespace CMAPTask.web.Controllers
 {
@@ -11,11 +19,19 @@ namespace CMAPTask.web.Controllers
     {
         private readonly IOpenBankingService _openBankingService;
         private readonly IRiskAnalyzer _riskAnalyzer;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly OBSettings _settings;
+        private readonly ITransactionsRepository _transactionsRepository;
+        private readonly EmailService _emailService;
 
-        public StartConsentController(IOpenBankingService openBankingService, IRiskAnalyzer riskAnalyzer)
+        public StartConsentController(IOpenBankingService openBankingService, IRiskAnalyzer riskAnalyzer, IHttpContextAccessor httpContextAccessor, IOptions<OBSettings> options, ITransactionsRepository transactionsRepository, EmailService emailService)
         {
             _openBankingService = openBankingService;
             _riskAnalyzer = riskAnalyzer;
+            _httpContextAccessor = httpContextAccessor;
+            _settings = options.Value;
+            _transactionsRepository = transactionsRepository;
+            _emailService = emailService;
         }
 
         public IActionResult Index()
@@ -41,7 +57,7 @@ namespace CMAPTask.web.Controllers
                 return StatusCode(500, "Failed to create agreement");
             }
 
-            var redirectUri = "https://localhost:7210/StartConsent/ConsentCallback";
+            var redirectUri = $"{_settings.SiteBaseURL}StartConsent/ConsentCallback?u={u}&c={c}&a={agreementId}";
             Console.WriteLine($"[DEBUG] Using redirect URI: {redirectUri}");
 
             var requisition = await _openBankingService.CreateRequisitionAsync(
@@ -75,12 +91,15 @@ namespace CMAPTask.web.Controllers
         }
 
 
-
+        public async Task<IActionResult> Invalid()
+        {
+            return View();
+        }
 
 
 
         [HttpGet]
-        public async Task<IActionResult> ConsentCallback()
+        public async Task<IActionResult> ConsentCallback(string u, string c, string a)
         {
             // Log the full callback URL and query parameters
             var fullUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}{Request.QueryString}";
@@ -181,17 +200,44 @@ namespace CMAPTask.web.Controllers
 
                     var transactionsJson = JsonSerializer.Serialize(transactions, new JsonSerializerOptions
                     {
-                        WriteIndented = true
+                        WriteIndented = false
                     });
+
+                    if (!Guid.TryParse(u, out Guid endUserId) || !Guid.TryParse(callbackRequisitionId, out Guid refId) || !Guid.TryParse(sessionRequisitionId, out Guid reqId) || !Guid.TryParse(a, out Guid agreementId))
+                    {
+                        return View("Invalid");
+                    }
+
+                    var userId = User.GetUserId();
+
+                    var entity = new Transaction
+                    {
+                        UserId = userId,
+                        JsonData = transactionsJson,
+                        Currency = viewModel.Currency,
+                        LastUpdated = DateTime.UtcNow,
+                        Reference = refId,
+                        ConsentId = reqId,
+                        AgreementId = agreementId,
+                        EndUserId = endUserId
+
+                    };
+
+                    var transactionId = await _transactionsRepository.SaveAsync(entity);
+                    await _transactionsRepository.UpdateStatusRequest(endUserId);
+
+
 
                     var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked);
                     viewModel.RiskSummary = riskSummary;
                     viewModel.HighRiskTransactions = highRiskTransactions;
 
+
+
                     Console.WriteLine($"[DEBUG] Risk analysis: Level={riskSummary.RiskLevel}, Alerts={riskSummary.RiskAlerts.Count}");
                     //TempData["TransactionsViewModel"] = JsonSerializer.Serialize(viewModel);
                     HttpContext.Session.SetString("TransactionsViewModel", JsonSerializer.Serialize(viewModel));
-                    return View("DisplayTransactions",viewModel);
+                    return View("TransactionCompleted", viewModel);
                     //return View("~/Views/Transactions/DisplayTransactions.cshtml", viewModel);
                 }
                 else
@@ -266,6 +312,10 @@ namespace CMAPTask.web.Controllers
             }
         }
 
+        public IActionResult TransactionCompleted()
+        {
+            return View();
+        }
 
         public IActionResult DisplayTransactions()
         {

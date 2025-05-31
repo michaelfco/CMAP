@@ -15,21 +15,29 @@ namespace OpenBanking.Domain.Entities.OB
         public Guid TransactionId { get; set; }
 
         [Required]
-        public Guid EndUserId { get; set; }
+        public Guid EndUserId { get; set; }        
+      
 
-        [ForeignKey("EndUserId")]
-        public virtual CompanyEndUser EndUser { get; set; }
+       // [ForeignKey("EndUserId")]
+        //public virtual CompanyEndUser EndUser { get; set; }
+
+        [Required]
+        public Guid UserId { get; set; }
 
         [Required]
         public string JsonData { get; set; }
 
-        [Required]
-        public DateTime PeriodStart { get; set; }
+        public DateTime? PeriodStart { get; set; } = null;
 
-        [Required]
-        public DateTime PeriodEnd { get; set; }
+        public DateTime? PeriodEnd { get; set; } = null;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public string Currency { get; set; }
+        public Guid AgreementId { get; set; }
+        public Guid ConsentId { get; set; }
+        public Guid Reference { get; set; }
+        public DateTime LastUpdated { get; set; }
         public int? IsDeleted { get; set; }
         public DateTime? DeletedAt { get; set; }
     }

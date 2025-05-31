@@ -4,6 +4,7 @@ using CMAPTask.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace OpenBanking.Infrastructure.Migrations
 {
     [DbContext(typeof(OBDbContext))]
-    partial class OBDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250531100911_removerequiredstartandenddate2")]
+    partial class removerequiredstartandenddate2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -351,9 +354,6 @@ namespace OpenBanking.Infrastructure.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("UseCredentialId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
@@ -372,11 +372,13 @@ namespace OpenBanking.Infrastructure.Migrations
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.CompanyEndUser", b =>
                 {
-                    b.HasOne("OpenBanking.Domain.Entities.OB.User", null)
+                    b.HasOne("OpenBanking.Domain.Entities.OB.User", "User")
                         .WithMany("CompanyEndUsers")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.Credit", b =>
@@ -392,11 +394,13 @@ namespace OpenBanking.Infrastructure.Migrations
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.GoCardlessSetting", b =>
                 {
-                    b.HasOne("OpenBanking.Domain.Entities.OB.User", null)
+                    b.HasOne("OpenBanking.Domain.Entities.OB.User", "User")
                         .WithMany("GoCardlessSettings")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.RepositoryStorage", b =>
