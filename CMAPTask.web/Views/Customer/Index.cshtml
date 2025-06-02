@@ -1,5 +1,4 @@
 ﻿@using static OpenBanking.Domain.Enums.Enum
-@* @model CMAPTask.Domain.Entities.OB.CustomerDetails *@
 @model List<OpenBanking.web.ViewModel.RecentUserViewModel>
 @{
     Layout = "_LayoutNew";
@@ -67,22 +66,21 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Name</th>                           
+                            <th scope="col">CreatedAt</th>
+                            <th scope="col">Name</th>
                             <th scope="col">Email</th>
                             <th scope="col">Phone</th>
-                            <th scope="col">CreatedAt</th>                           
+
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var user in Model.Where(a => a.Status == Status.pending).Take(6))
                         {
                             <tr>
-                                <td><input class="form-check-input" type="checkbox"></td>
-                                <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
                                 <td>@($"{user.FirstName} {user.LastName}")</td>
-                                <td>@user.PhoneNumber</td>
                                 <td>@user.Email</td>
+                                <td>@user.PhoneNumber</td>
                             </tr>
                         }
                     </tbody>
@@ -95,23 +93,21 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
+                            <th scope="col">CreatedAt</th>
                             <th scope="col">Name</th>
                             <th scope="col">Email</th>
                             <th scope="col">Phone</th>
-                            <th scope="col">CreatedAt</th>
-                            <th scope="col">View</th>
+                            <th scope="col"></th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var user in Model.Where(a => a.Status == Status.Complete).Take(6))
                         {
                             <tr>
-                                <td><input class="form-check-input" type="checkbox"></td>
-                                <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
                                 <td>@($"{user.FirstName} {user.LastName}")</td>
-                                <td>@user.PhoneNumber</td>
                                 <td>@user.Email</td>
+                                <td>@user.PhoneNumber</td>
                                 <td><a href="@($"/report?eid={user.EndUserId}&uid={user.UserId}")">View</a></td>
                             </tr>
                         }
@@ -119,7 +115,6 @@
                 </table>
             </div>
         </div>
-
     </div>
     <div class="modal fade" id="lightModal" tabindex="-1" aria-labelledby="lightModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -191,8 +186,6 @@
             });
         }
 
-
-
         // Call this after loading partial content:
         function loadModalContent(url) {
             const contentDiv = document.getElementById('modalContent');
@@ -213,15 +206,14 @@
                     console.error('Error loading modal content:', error);
                 });
         }
-
-
-
     </script>
 
-
-
-
-
-
-
- 
+    @section Styles {
+        <style>
+            /* Reduce table font size */
+            table.table-striped th,
+            table.table-striped td {
+                font-size: 0.7rem !important; /* Slightly smaller than .smaller-text (0.8rem) */
+            }
+        </style>
+    }

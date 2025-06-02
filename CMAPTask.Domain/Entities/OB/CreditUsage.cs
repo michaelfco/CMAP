@@ -8,23 +8,22 @@ using System.Threading.Tasks;
 
 namespace OpenBanking.Domain.Entities.OB
 {
-    public class Credit
+    public class CreditUsage
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid CreditUsageId { get; set; }
+
+        [Required]
+        public Guid UserId { get; set; }
+
+        [Required]
         public Guid CreditId { get; set; }
+        public Guid EndUserId { get; set; }
 
-        [Required]
-        public Guid UserId { get; set; }      
-
-        [Required]
-        public int TotalCredits { get; set; } = 0;
-
-        [Required]
-        public int CreditsUsed { get; set; } = 0;
+        public Guid TransactionId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
         public int? IsDeleted { get; set; }
         public DateTime? DeletedAt { get; set; }
     }
