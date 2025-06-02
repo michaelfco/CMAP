@@ -12,5 +12,6 @@ namespace OpenBanking.Application.Interfaces
     {
         Task<Guid> SaveAsync(Transaction user);
         Task<bool> UpdateStatusRequest(Guid endUserId);
+        Task<Transaction> GetCompleteTransactionAsync(Guid endUserId, Guid userId);
     }
 }

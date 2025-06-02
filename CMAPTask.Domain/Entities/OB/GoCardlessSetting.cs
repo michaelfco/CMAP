@@ -13,17 +13,16 @@ namespace OpenBanking.Domain.Entities.OB
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid ConfigId { get; set; }
-
-        [Required]
+       
         public Guid? UserId { get; set; }       
 
         [Required]
         [StringLength(500)]
-        public string ApiKey { get; set; }
+        public string SecretID { get; set; }
 
         [Required]
-        [StringLength(500)]
-        public string ApiSecret { get; set; }
+        [StringLength(1000)]
+        public string SecretKey { get; set; }
 
         [StringLength(1000)]
         public string? AccessToken { get; set; }
@@ -35,14 +34,17 @@ namespace OpenBanking.Domain.Entities.OB
 
        
         [StringLength(50)]
-        public string Environment { get; set; }
+        public string? Environment { get; set; }
+
+        [StringLength(500)]
+        public string BaseUrl { get; set; }
 
         [StringLength(500)]
         public string? WebhookSecret { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
         public int? IsDeleted { get; set; }
         public DateTime? DeletedAt { get; set; }
     }

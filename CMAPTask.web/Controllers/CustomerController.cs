@@ -56,6 +56,8 @@ namespace CMAPTask.web.Controllers
                 PhoneNumber = e.PhoneNumber,
                 CreatedAt = e.CreatedAt,
                 Status = e.Status,
+                UserId = e.UserId,
+                EndUserId = e.EndUserId
             }).OrderByDescending(a => a.CreatedAt).ToList();
 
             return View(model);

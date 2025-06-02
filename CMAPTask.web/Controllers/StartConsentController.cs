@@ -237,7 +237,7 @@ namespace CMAPTask.web.Controllers
                     Console.WriteLine($"[DEBUG] Risk analysis: Level={riskSummary.RiskLevel}, Alerts={riskSummary.RiskAlerts.Count}");
                     //TempData["TransactionsViewModel"] = JsonSerializer.Serialize(viewModel);
                     HttpContext.Session.SetString("TransactionsViewModel", JsonSerializer.Serialize(viewModel));
-                    return View("TransactionCompleted", viewModel);
+                    return View("TransactionCompleted");
                     //return View("~/Views/Transactions/DisplayTransactions.cshtml", viewModel);
                 }
                 else

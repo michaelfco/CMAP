@@ -1,0 +1,448 @@
+﻿@using Microsoft.AspNetCore.Html
+@model CMAPTask.web.ViewModel.AccountTransactionsViewModel
+@{
+    Layout = "_LayoutNew";
+    ViewData["Title"] = $"Transactions for Account ({Model.Currency})";
+}
+
+@functions {
+    public string FormatDateSafe(string dateStr, string format = "dd MMM yyyy")
+    {
+        if (DateTime.TryParse(dateStr, out var date))
+            return date.ToString(format);
+        return dateStr ?? "N/A";
+    }
+}
+
+<div class="container py-5">
+    <!-- Export to PDF Button -->
+    <div class="d-flex justify-content-end mb-4">
+        <button class="btn btn-primary" onclick="exportToPDF()">Export to PDF</button>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 bg-light text-center p-3">
+                <i class="fas fa-arrow-up fa-2x text-success mb-2"></i>
+                <h5 class="fw-semibold">Total Inflows</h5>
+                <p class="fs-4 fw-bold">@Model.RiskSummary.TotalInflows.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 bg-light text-center p-3">
+                <i class="fas fa-arrow-down fa-2x text-danger mb-2"></i>
+                <h5 class="fw-semibold">Total Outflows</h5>
+                <p class="fs-4 fw-bold">@Model.RiskSummary.TotalOutflows.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 bg-light text-center p-3">
+                <i class="fas fa-balance-scale fa-2x text-info mb-2"></i>
+                <h5 class="fw-semibold">Net Balance</h5>
+                <p class="fs-4 fw-bold">@Model.RiskSummary.NetBalance.ToString("C", new System.Globalization.CultureInfo("en-GB"))</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Summary Section -->
+    <div class="card shadow-sm border-0 rounded-3 mb-5">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 fw-semibold text-primary">Risk Summary</h2>
+                <span class="badge bg-secondary">
+                    Period: @DateTime.Today.AddDays(-90).ToString("dd MMM yyyy") - @DateTime.Today.ToString("dd MMM yyyy")
+                </span>
+            </div>
+            <div class="row align-items-start">
+                <!-- Risk Details -->
+                <div class="col-lg-7 mb-4 mb-lg-0">
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        <div class="col">
+                            <div class="p-3 bg-light rounded-3">
+                                <span class="fw-medium text-secondary d-block mb-1"><i class="fas fa-exclamation-circle me-2 text-warning"></i>Risk Level</span>
+                                <span class="fs-5 fw-bold">@Model.RiskSummary.RiskLevel</span>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 bg-light rounded-3">
+                                <span class="fw-medium text-secondary d-block mb-1">
+                                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>High-Value Transactions
+                                    @if (Model.RiskSummary.HighValueTransactionCount > 5)
+                                    {
+                                        <i class="fas fa-exclamation-circle text-danger ms-2" title="High risk: More than 5 high-value transactions"></i>
+                                    }
+                                </span>
+                                <span class="fs-5 fw-bold">@Model.RiskSummary.HighValueTransactionCount</span>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 bg-light rounded-3">
+                                <span class="fw-medium text-secondary d-block mb-1"><i class="fas fa-home me-2 text-primary"></i>Total Rent</span>
+                                <span class="fs-5 fw-bold">@Model.RiskSummary.TotalRent.ToString("C", new System.Globalization.CultureInfo("en-GB"))</span>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 bg-light rounded-3">
+                                <span class="fw-medium text-secondary d-block mb-1">
+                                    <i class="fas fa-dice me-2 text-danger"></i>Total Gambling
+                                    @if (Model.RiskSummary.TotalGambling > 5000)
+                                    {
+                                        <i class="fas fa-exclamation-circle text-danger ms-2" title="High risk: Gambling exceeds £5000"></i>
+                                    }
+                                </span>
+                                <span class="fs-5 fw-bold">@Model.RiskSummary.TotalGambling.ToString("C", new System.Globalization.CultureInfo("en-GB"))</span>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 bg-light rounded-3">
+                                <span class="fw-medium text-secondary d-block mb-1"><i class="fas fa-hand-holding-usd me-2 text-success"></i>Total Benefits</span>
+                                <span class="fs-5 fw-bold">@Model.RiskSummary.TotalBenefits.ToString("C", new System.Globalization.CultureInfo("en-GB"))</span>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 bg-light rounded-3">
+                                <span class="fw-medium text-secondary d-block mb-1"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>High-Risk Merchants</span>
+                                <span class="fs-5 fw-bold">@Model.RiskSummary.TotalHighRiskMerchant.ToString("C", new System.Globalization.CultureInfo("en-GB"))</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Assessments -->
+                    <div class="mt-4 p-3 bg-light rounded-3 border border-primary-subtle">
+                        <h5 class="fw-semibold text-dark mb-4">Risk Assessments</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card h-100 bg-white shadow-sm border-0">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas @(Model.RiskSummary.AffordabilityAssessment.Contains("Affordable") ? "fa-check-circle text-success" : "fa-exclamation-triangle text-danger") me-2 fs-4"></i>
+                                            <h6 class="card-title fw-semibold mb-0">Affordability</h6>
+                                        </div>
+                                        <p class="card-text fs-5 fw-bold text-dark">@Model.RiskSummary.AffordabilityAssessment</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100 bg-white shadow-sm border-0">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas @(Model.RiskSummary.InsolvencyRisk.Contains("Low") ? "fa-check-circle text-success" : "fa-exclamation-triangle text-danger") me-2 fs-4"></i>
+                                            <h6 class="card-title fw-semibold mb-0">Insolvency Risk</h6>
+                                        </div>
+                                        <p class="card-text fs-5 fw-bold text-dark">@Model.RiskSummary.InsolvencyRisk</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (Model.RiskSummary.RiskAlerts.Any())
+                        {
+                            <div class="mt-4">
+                                <h5 class="fw-semibold text-danger mb-3">Risk Alerts</h5>
+                                <div class="p-3 bg-light rounded-3 border border-danger-subtle">
+                                    <ul class="list-group list-group-flush">
+                                        @foreach (var alert in Model.RiskSummary.RiskAlerts)
+                                        {
+                                            <li class="list-group-item bg-danger-subtle text-danger">
+                                                <i class="fas fa-exclamation-circle me-2"></i>@alert
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Risk Distribution and Inflows vs Outflows Charts -->
+                <div class="col-lg-5 d-flex flex-column justify-content-between">
+                    <div class="card h-40 bg-light p-3 mb-3">
+                        <h5 class="fw-semibold">Risk Distribution</h5>
+                        <canvas id="riskBarChart"></canvas>
+                    </div>
+                    <div class="card h-40 bg-light p-3">
+                        <h5 class="fw-semibold">Inflows Against Outflows Percentage</h5>
+                        <canvas id="inflowsOutflowsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Section -->
+    @if (Model.Transactions.Transactions.Booked.Any() || Model.Transactions.Transactions.Pending.Any())
+    {
+        @if (Model.Transactions.Transactions.Booked.Any())
+        {
+            <div class="card shadow-sm border-0 rounded-3 mb-5">
+                <div class="card-body p-4">
+                    <h2 class="h4 fw-semibold mb-4 text-primary">Booked Transactions (@Model.Transactions.Transactions.Booked.Count())</h2>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Party</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Risk</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var transaction in Model.Transactions.Transactions.Booked)
+                                {
+                                    <tr class="@(Model.HighRiskTransactions.Contains(transaction) ? "table-danger" : "")">
+                                        <td>@transaction.TransactionId</td>
+                                        <td>@FormatDateSafe(transaction.BookingDate)</td>
+                                        <td>
+                                            @{
+                                                decimal amount;
+                                                var isParsed = decimal.TryParse(transaction.TransactionAmount.Amount, out amount);
+                                            }
+                                            @(isParsed ? amount.ToString("C", new System.Globalization.CultureInfo("en-GB")) : transaction.TransactionAmount.Amount)
+                                            @transaction.TransactionAmount.Currency
+                                        </td>
+                                        <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
+                                        <td>@transaction.RemittanceInformationUnstructured</td>
+                                        <td>@transaction.ProprietaryBankTransactionCode</td>
+                                        <td>
+                                            <span class="badge @(Model.HighRiskTransactions.Contains(transaction) ? "bg-danger" : "bg-success")" data-bs-toggle="tooltip" data-bs-placement="top" title="@(Model.HighRiskTransactions.Contains(transaction) ? "High risk due to large amount or high-risk merchant" : "Low risk transaction")">
+                                                @(Model.HighRiskTransactions.Contains(transaction) ? "High Risk" : "Low Risk")
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (Model.Transactions.Transactions.Pending.Any())
+        {
+            <div class="card shadow-sm border-0 rounded-3 mb-5">
+                <div class="card-body p-4">
+                    <h2 class="h4 fw-semibold mb-4 text-primary">Pending Transactions (@Model.Transactions.Transactions.Pending.Count())</h2>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Party</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Risk</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var transaction in Model.Transactions.Transactions.Pending)
+                                {
+                                    <tr class="@(Model.HighRiskTransactions.Contains(transaction) ? "table-danger" : "")">
+                                        <td>@transaction.TransactionId</td>
+                                        <td>@FormatDateSafe(transaction.BookingDate)</td>
+                                        <td>
+                                            @{
+                                                decimal amount;
+                                                var isParsed = decimal.TryParse(transaction.TransactionAmount.Amount, out amount);
+                                            }
+                                            @(isParsed ? amount.ToString("C", new System.Globalization.CultureInfo("en-GB")) : transaction.TransactionAmount.Amount)
+                                            @transaction.TransactionAmount.Currency
+                                        </td>
+                                        <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
+                                        <td>@transaction.RemittanceInformationUnstructured</td>
+                                        <td>@transaction.ProprietaryBankTransactionCode</td>
+                                        <td>
+                                            <span class="badge @(Model.HighRiskTransactions.Contains(transaction) ? "bg-danger" : "bg-success")" data-bs-toggle="tooltip" data-bs-placement="top" title="@(Model.HighRiskTransactions.Contains(transaction) ? "High risk due to large amount or high-risk merchant" : "Low risk transaction")">
+                                                @(Model.HighRiskTransactions.Contains(transaction) ? "High Risk" : "Low Risk")
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info text-center" role="alert">
+            <h4 class="alert-heading">No Transactions Found</h4>
+            <p>No transactions are available for this account at this time.</p>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .high-risk {
+            background-color: #ffe6e6 !important;
+        }
+
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.5em 1em;
+            border-radius: 0.25rem;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Export to PDF placeholder function
+        function exportToPDF() {
+            alert('Export to PDF functionality to be implemented. Please contact your administrator to set up the backend PDF generation.');
+            // Replace with actual backend call, e.g., window.location.href = '/Controller/ExportToPDF';
+        }
+
+        // Risk Distribution (Stacked Bar Chart)
+        const riskBarCtx = document.getElementById('riskBarChart').getContext('2d');
+        new Chart(riskBarCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Risk Distribution'],
+                datasets: [
+                    {
+                        label: 'Rent',
+                        data: [@Model.RiskSummary.TotalRent],
+                        backgroundColor: '#28a745',
+                        borderColor: '#28a745',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Gambling',
+                        data: [@Model.RiskSummary.TotalGambling],
+                        backgroundColor: '#dc3545',
+                        borderColor: '#dc3545',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Benefits',
+                        data: [@Model.RiskSummary.TotalBenefits],
+                        backgroundColor: '#ffc107',
+                        borderColor: '#ffc107',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'High-Risk Merchants',
+                        data: [@Model.RiskSummary.TotalHighRiskMerchant],
+                        backgroundColor: '#6f42c1',
+                        borderColor: '#6f42c1',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let value = context.raw.toLocaleString('en-GB', { style: 'currency', currency: 'GBP' });
+                                return context.dataset.label + ': ' + value;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Amount (£)'
+                        }
+                    },
+                    y: {
+                        stacked: true
+                    }
+                }
+            }
+        });
+
+        // Inflows Against Outflows Percentage (Stacked Bar Chart)
+        const inflowsOutflowsCtx = document.getElementById('inflowsOutflowsChart').getContext('2d');
+        const totalInflows = @Model.RiskSummary.TotalInflows;
+        const totalOutflows = @Model.RiskSummary.TotalOutflows;
+        const totalTransactions = totalInflows + totalOutflows;
+        const inflowsPercentage = totalTransactions > 0 ? (totalInflows / totalTransactions) * 100 : 0;
+        const outflowsPercentage = totalTransactions > 0 ? (totalOutflows / totalTransactions) * 100 : 0;
+        const remainderPercentage = 100 - (inflowsPercentage + outflowsPercentage);
+
+        new Chart(inflowsOutflowsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Inflows vs Outflows'],
+                datasets: [
+                    {
+                        label: 'Inflows',
+                        data: [inflowsPercentage],
+                        backgroundColor: '#007bff', // Blue
+                        borderColor: '#007bff',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Outflows',
+                        data: [outflowsPercentage],
+                        backgroundColor: '#fd7e14', // Orange
+                        borderColor: '#fd7e14',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Remainder',
+                        data: [remainderPercentage > 0 ? remainderPercentage : 0],
+                        backgroundColor: '#ced4da', // Light Gray
+                        borderColor: '#ced4da',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let value = context.raw.toFixed(2) + '%';
+                                return context.dataset.label + ': ' + value;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Percentage (%)'
+                        }
+                    },
+                    y: {
+                        stacked: true
+                    }
+                }
+            }
+        });
+    </script>
+}

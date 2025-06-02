@@ -112,7 +112,7 @@
                                 <td>@($"{user.FirstName} {user.LastName}")</td>
                                 <td>@user.PhoneNumber</td>
                                 <td>@user.Email</td>
-                                <td><a href="#">View</a></td>
+                                <td><a href="@($"/report?eid={user.EndUserId}&uid={user.UserId}")">View</a></td>
                             </tr>
                         }
                     </tbody>

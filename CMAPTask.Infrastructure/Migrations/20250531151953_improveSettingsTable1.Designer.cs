@@ -4,6 +4,7 @@ using CMAPTask.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace OpenBanking.Infrastructure.Migrations
 {
     [DbContext(typeof(OBDbContext))]
-    partial class OBDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250531151953_improveSettingsTable1")]
+    partial class improveSettingsTable1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -174,6 +177,7 @@ namespace OpenBanking.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Environment")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -197,10 +201,10 @@ namespace OpenBanking.Infrastructure.Migrations
                     b.Property<DateTime?>("TokenExpiresAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("UserId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("WebhookSecret")
@@ -398,7 +402,9 @@ namespace OpenBanking.Infrastructure.Migrations
                 {
                     b.HasOne("OpenBanking.Domain.Entities.OB.User", null)
                         .WithMany("GoCardlessSettings")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.RepositoryStorage", b =>

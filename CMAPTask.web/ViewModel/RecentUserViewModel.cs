@@ -10,5 +10,7 @@ namespace OpenBanking.web.ViewModel
         public string? PhoneNumber { get; set; }
         public DateTime CreatedAt { get; set; }
         public Status? Status { get; set; }
+        public Guid UserId { get; set; }
+        public Guid EndUserId { get; set; }
     }
 }
