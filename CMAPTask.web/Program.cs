@@ -5,6 +5,7 @@ using CMAPTask.Infrastructure.Extensions;
 using CMAPTask.Infrastructure.Services;
 using CMAPTask.web;
 using OpenBanking.Domain.Entities.Model;
+using Rotativa.AspNetCore;
 using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +41,7 @@ builder.Services.AddHttpClient<OpenBankingService>(client =>
 });
 
 builder.Services.AddDistributedMemoryCache();
+RotativaConfiguration.Setup("wwwroot", "Rotativa");
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(10);

@@ -21,12 +21,12 @@ namespace OpenBanking.web.Controllers
 
         public ReportController(IRiskAnalyzer riskAnalyzer, IHttpContextAccessor httpContextAccessor, IOptions<OBSettings> options, ITransactionsRepository transactionsRepository)
         {
-           
+
             _riskAnalyzer = riskAnalyzer;
             _httpContextAccessor = httpContextAccessor;
             _settings = options.Value;
             _transactionsRepository = transactionsRepository;
-           
+
         }
 
         [Authorize]
@@ -49,7 +49,10 @@ namespace OpenBanking.web.Controllers
                 AccountId = null,
                 Currency = transaction.Currency,
                 Transactions = transactions,
-                LastUpdated = transaction.LastUpdated
+                LastUpdated = transaction.LastUpdated,
+                CreatedAt = transaction.CreatedAt,                
+                EndUserId = endUserId,
+                UserId = userId
             };
 
             var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked);
@@ -61,6 +64,50 @@ namespace OpenBanking.web.Controllers
             Console.WriteLine($"[DEBUG] Risk Summary: Level={view.RiskSummary.RiskLevel}, Inflows={view.RiskSummary.TotalInflows}, Outflows={view.RiskSummary.TotalOutflows}, Net={view.RiskSummary.NetBalance}");
 
             return View("Index", view);
+        }
+
+
+        [Authorize]
+        public async Task<IActionResult> ExportToPDF(string eid, string uid)
+        {
+            if (!Guid.TryParse(eid, out Guid endUserId) || !Guid.TryParse(uid, out Guid userId))
+            {
+                return NotFound("Invalid end user ID or user ID.");
+            }
+
+            var transaction = await _transactionsRepository.GetCompleteTransactionAsync(endUserId, userId);
+            if (transaction == null)
+            {
+                return NotFound("Transaction data not found.");
+            }
+
+            var transactions = JsonSerializer.Deserialize<TransactionResponse>(transaction.JsonData, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var model = new AccountTransactionsViewModel
+            {
+                AccountId = null,
+                Currency = transaction.Currency,
+                Transactions = transactions,
+                LastUpdated = transaction.LastUpdated,
+                CreatedAt = transaction.CreatedAt,
+                EndUserId = endUserId,
+                UserId = userId
+            };
+
+            var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked, true);
+            model.RiskSummary = riskSummary;
+            model.HighRiskTransactions = highRiskTransactions;
+
+            return new Rotativa.AspNetCore.ViewAsPdf("_ReportExportPDF", model)
+            {
+                FileName = $"Account_Transactions_{DateTime.Now:yyyyMMdd}.pdf",
+                PageSize = Rotativa.AspNetCore.Options.Size.A4,
+                PageMargins = new Rotativa.AspNetCore.Options.Margins(20, 10, 20, 10), // Top, Right, Bottom, Left in mm
+                CustomSwitches = "--footer-center \"Page [page] of [topage]\" --footer-font-size 10 --footer-spacing 5"
+            };
         }
     }
 }

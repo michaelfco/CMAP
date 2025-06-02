@@ -224,21 +224,10 @@ namespace CMAPTask.web.Controllers
                     };
 
                     var transactionId = await _transactionsRepository.SaveAsync(entity);
-                    await _transactionsRepository.UpdateStatusRequest(endUserId);
-
-
-
-                    var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked);
-                    viewModel.RiskSummary = riskSummary;
-                    viewModel.HighRiskTransactions = highRiskTransactions;
-
-
-
-                    Console.WriteLine($"[DEBUG] Risk analysis: Level={riskSummary.RiskLevel}, Alerts={riskSummary.RiskAlerts.Count}");
-                    //TempData["TransactionsViewModel"] = JsonSerializer.Serialize(viewModel);
-                    HttpContext.Session.SetString("TransactionsViewModel", JsonSerializer.Serialize(viewModel));
+                    await _transactionsRepository.UpdateStatusRequest(endUserId);  
+                  
                     return View("TransactionCompleted");
-                    //return View("~/Views/Transactions/DisplayTransactions.cshtml", viewModel);
+                   
                 }
                 else
                 {
@@ -315,40 +304,8 @@ namespace CMAPTask.web.Controllers
         public IActionResult TransactionCompleted()
         {
             return View();
-        }
-
-        public IActionResult DisplayTransactions()
-        {
-            var viewModelJson = HttpContext.Session.GetString("TransactionsViewModel");
-            if (string.IsNullOrEmpty(viewModelJson))
-            {
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var viewModel = JsonSerializer.Deserialize<AccountTransactionsViewModel>(viewModelJson, options);
-                if (viewModel == null)
-                {
-                    Console.WriteLine("[DEBUG] Failed to deserialize TransactionsViewModel from TempData.");
-                    return StatusCode(500, "Failed to load transaction data.");
-                }
-
-                Console.WriteLine($"[DEBUG] Rendering Transactions view for account {viewModel.AccountId} (Currency: {viewModel.Currency})");
-                Console.WriteLine($"[DEBUG] Risk Summary: Level={viewModel.RiskSummary.RiskLevel}, Inflows={viewModel.RiskSummary.TotalInflows}, Outflows={viewModel.RiskSummary.TotalOutflows}, Net={viewModel.RiskSummary.NetBalance}");
-                return View("DisplayTransactions", viewModel);
-            }
-
-            Console.WriteLine("[DEBUG] No TransactionsViewModel found in TempData.");
-            return BadRequest("No transaction data available.");
-        }
-
-        //public async Task<IActionResult> ShowTransactions(string accountId)
-        //{
-        //    if (string.IsNullOrEmpty(accountId))
-        //        return BadRequest("Account ID is required");
-
-        //    var transactionsResponse = await _openBankingService.GetTransactionsByAccountIdAsync(accountId);
-
-        //    // You could pass the booked transactions to the view
-        //    return View("Transactions", transactionsResponse.Transactions.Booked);
-        //}
+        }   
+       
 
     }
 
