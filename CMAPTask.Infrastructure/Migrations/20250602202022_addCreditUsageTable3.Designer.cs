@@ -4,6 +4,7 @@ using CMAPTask.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace OpenBanking.Infrastructure.Migrations
 {
     [DbContext(typeof(OBDbContext))]
-    partial class OBDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250602202022_addCreditUsageTable3")]
+    partial class addCreditUsageTable3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -147,41 +150,6 @@ namespace OpenBanking.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Credits");
-                });
-
-            modelBuilder.Entity("OpenBanking.Domain.Entities.OB.CreditUsage", b =>
-                {
-                    b.Property<Guid>("CreditUsageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CreditId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("EndUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int?>("IsDeleted")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("TransactionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("CreditUsageId");
-
-                    b.ToTable("CreditUsages");
                 });
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.GoCardlessSetting", b =>

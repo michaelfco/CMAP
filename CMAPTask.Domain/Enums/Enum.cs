@@ -19,7 +19,8 @@ namespace OpenBanking.Domain.Enums
         {
             pending = 1,
             Complete = 2,
-            Other = 3
+            Other = 3,
+            deleted = 4
         }
     }
 }

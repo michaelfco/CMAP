@@ -23,8 +23,9 @@ namespace CMAPTask.web.Controllers
         private readonly OBSettings _settings;
         private readonly ITransactionsRepository _transactionsRepository;
         private readonly EmailService _emailService;
+        private readonly ICreditRepository _creditRepository;
 
-        public StartConsentController(IOpenBankingService openBankingService, IRiskAnalyzer riskAnalyzer, IHttpContextAccessor httpContextAccessor, IOptions<OBSettings> options, ITransactionsRepository transactionsRepository, EmailService emailService)
+        public StartConsentController(IOpenBankingService openBankingService, IRiskAnalyzer riskAnalyzer, IHttpContextAccessor httpContextAccessor, IOptions<OBSettings> options, ITransactionsRepository transactionsRepository, EmailService emailService, ICreditRepository creditRepository)
         {
             _openBankingService = openBankingService;
             _riskAnalyzer = riskAnalyzer;
@@ -32,6 +33,7 @@ namespace CMAPTask.web.Controllers
             _settings = options.Value;
             _transactionsRepository = transactionsRepository;
             _emailService = emailService;
+            _creditRepository = creditRepository;
         }
 
         public IActionResult Index()
@@ -224,7 +226,9 @@ namespace CMAPTask.web.Controllers
                     };
 
                     var transactionId = await _transactionsRepository.SaveAsync(entity);
+                    await _creditRepository.UpdateCreditUsage(endUserId, transactionId);
                     await _transactionsRepository.UpdateStatusRequest(endUserId);  
+                    
                   
                     return View("TransactionCompleted");
                    

@@ -21,6 +21,7 @@ namespace CMAPTask.Infrastructure.Context
         public DbSet<Credit> Credits { get; set; }
         public DbSet<GoCardlessSetting> GoCardlessSettings { get; set; }
         public DbSet<RepositoryStorage> RepositoryStorages { get; set; }
+        public DbSet<CreditUsage> CreditUsages { get; set; }
         public DbSet<OpenBanking.Domain.Entities.OB.Transaction> Transactions { get; set; }
 
         // Optional: Fluent API configurations

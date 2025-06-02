@@ -19,9 +19,8 @@ namespace OpenBanking.Domain.Entities.OB
 
         [Required]
         public int TotalCredits { get; set; } = 0;
-
-        [Required]
-        public int CreditsUsed { get; set; } = 0;
+       
+        public int? CreditsUsed { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;

@@ -20,18 +20,20 @@ namespace CMAPTask.web.Controllers
         private readonly OBDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICompanyEndUserRepository _companyUserRepository;
+        private readonly ICreditRepository _creditRepository;
         private readonly OBSettings _settings;
         private readonly EmailService _emailService;
 
 
 
-        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor, ICompanyEndUserRepository companyUserRepository, IOptions<OBSettings> options, EmailService emailService)
+        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor, ICompanyEndUserRepository companyUserRepository, IOptions<OBSettings> options, EmailService emailService, ICreditRepository creditRepository)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _companyUserRepository = companyUserRepository;
             _settings = options.Value;
             _emailService = emailService;
+            _creditRepository = creditRepository;
         }
 
 
@@ -93,6 +95,16 @@ namespace CMAPTask.web.Controllers
             };
 
             var id = await _companyUserRepository.SaveAsync(entity);
+
+            var creditUsage = new CreditUsage
+            {
+                UserId = userId,
+                EndUserId = id,
+                Status = Status.pending
+               
+            };
+
+            await _creditRepository.AddPendingCreditUsageAsync(creditUsage);
 
             var urlToSend = $"{_settings.SiteBaseURL}OpenBanking/ShowInstitutions?u={id}&c={userId}";
 

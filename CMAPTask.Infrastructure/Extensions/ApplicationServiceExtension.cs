@@ -32,6 +32,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IDapperGenericRepository, DapperGenericRepository>();
         services.AddScoped<ICompanyEndUserRepository, CompanyEndUserRepository>();
         services.AddScoped<ITransactionsRepository, TransactionsRepository>();
+        services.AddScoped<ICreditRepository, CreditRepository>();
 
         services.AddTransient<EmailService>();
 
