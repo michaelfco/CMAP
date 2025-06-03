@@ -1,4 +1,5 @@
-﻿using static OpenBanking.Domain.Enums.Enum;
+﻿using OpenBanking.Application.DTOs;
+using static OpenBanking.Domain.Enums.Enum;
 
 namespace OpenBanking.web.ViewModel
 {
@@ -12,5 +13,7 @@ namespace OpenBanking.web.ViewModel
         public Status? Status { get; set; }
         public Guid UserId { get; set; }
         public Guid EndUserId { get; set; }
+
+        public CreditDto Credits { get; set; }
     }
 }

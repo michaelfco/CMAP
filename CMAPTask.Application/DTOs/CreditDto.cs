@@ -13,5 +13,6 @@ namespace OpenBanking.Application.DTOs
         public int? Quantity { get; set; }
         public int ActiveCredit { get; set; }
         public int PendingCredit { get; set; }
+        public int UsedCredit { get; set; }
     }
 }

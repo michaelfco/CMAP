@@ -49,6 +49,7 @@ namespace CMAPTask.web.Controllers
             }
 
             var users = await _companyUserRepository.GetAllAsync(userId, null);
+            var credit = await _creditRepository.GetCreditUsage(userId);
 
             var model = users.Select(e => new RecentUserViewModel
             {
@@ -59,8 +60,11 @@ namespace CMAPTask.web.Controllers
                 CreatedAt = e.CreatedAt,
                 Status = e.Status,
                 UserId = e.UserId,
-                EndUserId = e.EndUserId
+                EndUserId = e.EndUserId,
+                Credits = credit
             }).OrderByDescending(a => a.CreatedAt).ToList();
+
+          
 
             return View(model);
         }

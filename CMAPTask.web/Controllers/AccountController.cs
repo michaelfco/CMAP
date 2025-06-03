@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OpenBanking.Application.Interfaces;
 using OpenBanking.web.ViewModel;
 using System.Security.Claims;
 
@@ -10,10 +11,11 @@ namespace OpenBanking.web.Controllers
     public class AccountController : Controller
     {
         private readonly OBDbContext _db;
+       
 
         public AccountController(OBDbContext db)
         {
-            _db = db;
+            _db = db;          
         }
 
         [HttpGet, AllowAnonymous]
@@ -26,6 +28,7 @@ namespace OpenBanking.web.Controllers
                 return View(model);
 
             var user = _db.Users.SingleOrDefault(u => u.Email == model.Email && u.PasswordHash == model.Password);
+          
 
             if (user == null)
             {
@@ -33,11 +36,17 @@ namespace OpenBanking.web.Controllers
                 return View(model);
             }
 
-            var claims = new List<Claim>
+           // var credit = await _creditRepository.GetCreditUsage(user.UserId);
+
+           var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Email),
             new Claim("DisplayName", user.CompanyName),
             new Claim("UserId", user.UserId.ToString()),
+            //new Claim("PendingCredit", credit.PendingCredit.ToString()),
+            //new Claim("ActiveCredit", credit.ActiveCredit.ToString()),
+            //new Claim("UsedCredit", credit.UsedCredit.ToString()),
+            //new Claim("TotalCredit", credit.Quantity.ToString()),
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Role, user.Role.ToString()) // Optional
         };

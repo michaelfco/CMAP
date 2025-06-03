@@ -10,15 +10,24 @@
     }
 }
 <div class="container-fluid pt-2 px-4">
+
+
     <div class="row d-flex justify-content-end">
-        <button type="button"
-                class="btn btn-primary m-2"
-                style="width: 150px;"
-                data-bs-toggle="modal"
-                data-bs-target="#lightModal"
-                onclick="loadModalContent('/Customer/NewRequest')">
-            New Request
-        </button>
+        @{
+            var hasActiveCredit = Model.FirstOrDefault()?.Credits?.ActiveCredit > 0;
+        }
+        <span data-bs-toggle="tooltip"
+              title="@(hasActiveCredit ? "Create a new request" : "You don’t have enough active credits to make a new request")"
+              style="display: inline-block; width:180px" class="d-flex justify-content-end">
+            <button type="button"
+                    class="btn btn-primary m-2"
+                    style="width: 150px; @(hasActiveCredit ? "" : "opacity: 0.6; pointer-events: none;")"
+            @(hasActiveCredit ? "" : "disabled aria-disabled=\"true\"")
+                    onclick="handleNewRequestClick(@hasActiveCredit.ToString().ToLower())">
+                New Request
+            </button>
+        </span>
+
     </div>
     <div class="row g-4">
         <div class="col-sm-6 col-xl-3">
@@ -136,6 +145,15 @@
     </div>
 
     <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+
         // Load modal content by URL and bind submit handler after load
         // Load modal content by URL and bind submit handler after load
         function bindFormSubmit() {
@@ -211,6 +229,22 @@
                     console.error('Error loading modal content:', error);
                 });
         }
+
+
+
+        function handleNewRequestClick(hasCredit) {
+            if (hasCredit === 'false') {
+                event.preventDefault();
+                event.stopPropagation();
+                alert("You don’t have enough active credits to make a new request.");
+                return false;
+            }
+
+            // If credit is available, load the modal content
+            loadModalContent('/Customer/NewRequest');
+        }
+
+
     </script>
 
     @section Styles {
