@@ -10,8 +10,6 @@
     }
 }
 <div class="container-fluid pt-2 px-4">
-
-
     <div class="row d-flex justify-content-end">
         @{
             var hasActiveCredit = Model.FirstOrDefault()?.Credits?.ActiveCredit > 0;
@@ -27,7 +25,6 @@
                 New Request
             </button>
         </span>
-
     </div>
     <div class="row g-4">
         <div class="col-sm-6 col-xl-3">
@@ -84,7 +81,6 @@
                             <th scope="col">Name</th>
                             <th scope="col">Email</th>
                             <th scope="col">Phone</th>
-
                         </tr>
                     </thead>
                     <tbody>
@@ -145,7 +141,6 @@
     </div>
 
     <script>
-
         document.addEventListener('DOMContentLoaded', function () {
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.forEach(function (tooltipTriggerEl) {
@@ -153,8 +148,6 @@
             });
         });
 
-
-        // Load modal content by URL and bind submit handler after load
         // Load modal content by URL and bind submit handler after load
         function bindFormSubmit() {
             const form = document.getElementById('newRequestForm');
@@ -230,8 +223,6 @@
                 });
         }
 
-
-
         function handleNewRequestClick(hasCredit) {
             if (hasCredit === 'false') {
                 event.preventDefault();
@@ -240,11 +231,17 @@
                 return false;
             }
 
-            // If credit is available, load the modal content
+            // If credit is available, show the modal and load the content
+            const modalElement = document.getElementById('lightModal');
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+
+            // Load the modal content
             loadModalContent('/Customer/NewRequest');
         }
-
-
     </script>
 
     @section Styles {
@@ -256,3 +253,4 @@
             }
         </style>
     }
+</div>
