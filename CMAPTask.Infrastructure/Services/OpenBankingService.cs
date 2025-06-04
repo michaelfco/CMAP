@@ -34,9 +34,13 @@ namespace CMAPTask.Infrastructure.Services
                 new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        public async Task<OBTokenResponse> UseTokenAsync()
+        public async Task<OBTokenResponse> UseTokenAsync(string uId)
         {
-            var token = await _obTokenService.GetTokenAsync();
+            if(!Guid.TryParse(uId, out var userId))
+            {
+                throw new Exception("Invalid User.");
+            }
+            var token = await _obTokenService.GetTokenAsync(userId);
 
             if (token == null)
                 throw new Exception("Failed to retrieve token.");
@@ -65,9 +69,15 @@ namespace CMAPTask.Infrastructure.Services
             return institutions ?? throw new Exception("Failed to deserialize institutions response.");
         }
 
-        public async Task<string> CreateConsentSessionAsync(string institutionId)
+        public async Task<string> CreateConsentSessionAsync(string institutionId, string c)
         {
-            var token = await _obTokenService.GetTokenAsync();
+            if (!Guid.TryParse(c, out var userId))
+            {
+                throw new Exception("Invalid User.");
+            }
+            var token = await _obTokenService.GetTokenAsync(userId);
+
+
             if (token == null)
             {
                 Console.WriteLine("[DEBUG] Failed to retrieve token in CreateConsentSessionAsync.");
@@ -108,9 +118,14 @@ namespace CMAPTask.Infrastructure.Services
 
 
 
-        public async Task<string> ExchangeRefForAccessTokenAsync(string requisitionRef)
+        public async Task<string> ExchangeRefForAccessTokenAsync(string requisitionRef, string c)
         {
-            var token = await _obTokenService.GetTokenAsync();
+            if (!Guid.TryParse(c, out var userId))
+            {
+                throw new Exception("Invalid User.");
+            }
+            var token = await _obTokenService.GetTokenAsync(userId);
+
             if (token == null)
                 throw new Exception("Failed to retrieve token.");
 
@@ -162,9 +177,14 @@ namespace CMAPTask.Infrastructure.Services
             return transactions ?? new List<TransactionResponse>();
         }
 
-        public async Task<RequisitionResponse> CreateRequisitionAsync(string institutionId, string agreementId, string redirectUri)
+        public async Task<RequisitionResponse> CreateRequisitionAsync(string institutionId, string agreementId, string redirectUri, string c)
         {
-            var token = await _obTokenService.GetTokenAsync();
+            if (!Guid.TryParse(c, out var userId))
+            {
+                throw new Exception("Invalid User.");
+            }
+            var token = await _obTokenService.GetTokenAsync(userId);
+
             if (token == null)
             {
                 Console.WriteLine("[DEBUG] Failed to retrieve token in CreateRequisitionAsync.");
@@ -219,9 +239,14 @@ namespace CMAPTask.Infrastructure.Services
         }
 
 
-        public async Task<(List<BankAccount> Accounts, string Status)> GetAccountsByRequisitionIdAsync(string requisitionId)
+        public async Task<(List<BankAccount> Accounts, string Status)> GetAccountsByRequisitionIdAsync(string requisitionId, string c)
         {
-            var token = await _obTokenService.GetTokenAsync();
+            if (!Guid.TryParse(c, out var userId))
+            {
+                throw new Exception("Invalid User.");
+            }
+            var token = await _obTokenService.GetTokenAsync(userId);
+
             if (token == null)
                 throw new Exception("Failed to retrieve token.");
 
@@ -259,9 +284,14 @@ namespace CMAPTask.Infrastructure.Services
         }
 
 
-        public async Task<TransactionResponse> GetTransactionsByAccountIdAsync(string accountId)
+        public async Task<TransactionResponse> GetTransactionsByAccountIdAsync(string accountId, string c)
         {
-            var token = await _obTokenService.GetTokenAsync();
+            if (!Guid.TryParse(c, out var userId))
+            {
+                throw new Exception("Invalid User.");
+            }
+            var token = await _obTokenService.GetTokenAsync(userId);
+
             if (token == null)
                 throw new Exception("Failed to retrieve token.");
 
@@ -283,9 +313,14 @@ namespace CMAPTask.Infrastructure.Services
         }
 
 
-        public async Task<AccountDetails> GetAccountDetailsAsync(string accountId)
+        public async Task<AccountDetails> GetAccountDetailsAsync(string accountId, string c)
         {
-            var token = await _obTokenService.GetTokenAsync();
+            if (!Guid.TryParse(c, out var userId))
+            {
+                throw new Exception("Invalid User.");
+            }
+            var token = await _obTokenService.GetTokenAsync(userId);
+
             if (token == null)
             {
                 System.Console.WriteLine("[DEBUG] Failed to retrieve token in GetAccountDetailsAsync.");

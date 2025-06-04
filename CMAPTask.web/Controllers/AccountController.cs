@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OpenBanking.Application.Interfaces;
+using OpenBanking.Domain.Interfaces;
 using OpenBanking.web.ViewModel;
 using System.Security.Claims;
 
@@ -11,11 +12,12 @@ namespace OpenBanking.web.Controllers
     public class AccountController : Controller
     {
         private readonly OBDbContext _db;
-       
+ 
 
         public AccountController(OBDbContext db)
         {
-            _db = db;          
+            _db = db;        
+          
         }
 
         [HttpGet, AllowAnonymous]
@@ -36,7 +38,7 @@ namespace OpenBanking.web.Controllers
                 return View(model);
             }
 
-           // var credit = await _creditRepository.GetCreditUsage(user.UserId);
+         
 
            var claims = new List<Claim>
         {

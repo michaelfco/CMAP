@@ -37,7 +37,7 @@ namespace CMAPTask.web.Controllers
 
             if (companyUser != null)
             {
-                var token = await _openBankingService.UseTokenAsync();
+                var token = await _openBankingService.UseTokenAsync(c);
                 var institutions = await _openBankingService.GetInstitutionsAsync(token.Access, "gb");
 
 

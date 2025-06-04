@@ -46,36 +46,37 @@ namespace CMAPTask.web.Controllers
             institutionId = "SANDBOXFINANCE_SFIN0000";
             if (string.IsNullOrEmpty(institutionId))
             {
-                Console.WriteLine("[DEBUG] Institution ID is missing in Consent.");
+                //Console.WriteLine("[DEBUG] Institution ID is missing in Consent.");
                 return BadRequest("Institution ID is required");
             }
 
-            Console.WriteLine($"[DEBUG] Starting consent for institution: {institutionId}");
+            //Console.WriteLine($"[DEBUG] Starting consent for institution: {institutionId}");
 
-            var agreementId = await _openBankingService.CreateConsentSessionAsync(institutionId);
+            var agreementId = await _openBankingService.CreateConsentSessionAsync(institutionId, c);
             if (string.IsNullOrEmpty(agreementId))
             {
-                Console.WriteLine($"[DEBUG] Failed to create agreement for institution: {institutionId}");
+                //Console.WriteLine($"[DEBUG] Failed to create agreement for institution: {institutionId}");
                 return StatusCode(500, "Failed to create agreement");
             }
 
             var redirectUri = $"{_settings.SiteBaseURL}StartConsent/ConsentCallback?u={u}&c={c}&a={agreementId}";
-            Console.WriteLine($"[DEBUG] Using redirect URI: {redirectUri}");
+            //Console.WriteLine($"[DEBUG] Using redirect URI: {redirectUri}");
 
             var requisition = await _openBankingService.CreateRequisitionAsync(
                 institutionId,
                 agreementId,
-                redirectUri
+                redirectUri,
+                c
             );
 
             if (requisition == null || string.IsNullOrEmpty(requisition.Id) || string.IsNullOrEmpty(requisition.Link))
             {
-                Console.WriteLine($"[DEBUG] Failed to create requisition for institution: {institutionId}");
+                //Console.WriteLine($"[DEBUG] Failed to create requisition for institution: {institutionId}");
                 return StatusCode(500, "Failed to create requisition");
             }
 
             HttpContext.Session.SetString("RequisitionId", requisition.Id);
-            Console.WriteLine($"[DEBUG] Stored requisition ID in session: {requisition.Id}");
+            //Console.WriteLine($"[DEBUG] Stored requisition ID in session: {requisition.Id}");
 
             var userAgent = Request.Headers["User-Agent"].ToString();
             var isDesktop = userAgent.Contains("Windows") || userAgent.Contains("Macintosh") || userAgent.Contains("Linux");
@@ -88,7 +89,7 @@ namespace CMAPTask.web.Controllers
             }
 
             // Mobile: redirect directly
-            Console.WriteLine($"[DEBUG] Redirecting to: {requisition.Link}");
+            //Console.WriteLine($"[DEBUG] Redirecting to: {requisition.Link}");
             return Redirect(requisition.Link);
         }
 
@@ -149,7 +150,7 @@ namespace CMAPTask.web.Controllers
             try
             {
                 //Console.WriteLine($"[DEBUG] Processing requisition ID: {requisitionId}");
-                var (accounts, status) = await _openBankingService.GetAccountsByRequisitionIdAsync(requisitionId);
+                var (accounts, status) = await _openBankingService.GetAccountsByRequisitionIdAsync(requisitionId,c);
                 //Console.WriteLine($"[DEBUG] Requisition {requisitionId} status: {status}");
 
                 if (status != "LN")
@@ -172,7 +173,7 @@ namespace CMAPTask.web.Controllers
                 {
                     try
                     {
-                        var details = await _openBankingService.GetAccountDetailsAsync(account.Id);
+                        var details = await _openBankingService.GetAccountDetailsAsync(account.Id,c);
                         accountDetailsList.Add(details);
                         //Console.WriteLine($"[DEBUG] Account {account.Id}: Currency={details.Currency}, IBAN={details.Iban}");
                     }
@@ -188,7 +189,7 @@ namespace CMAPTask.web.Controllers
 
                 if (gbpAccount != null)
                 {
-                    var transactions = await _openBankingService.GetTransactionsByAccountIdAsync(gbpAccount.Id);
+                    var transactions = await _openBankingService.GetTransactionsByAccountIdAsync(gbpAccount.Id, c);
                     if (transactions == null)
                         return View("NoTransactions");
 
@@ -238,7 +239,7 @@ namespace CMAPTask.web.Controllers
                     //Console.WriteLine("[DEBUG] No GBP account found.");
                     // Fallback to first account if GBP not found
                     var firstAccountId = accounts.First().Id;
-                    var transactions = await _openBankingService.GetTransactionsByAccountIdAsync(firstAccountId);
+                    var transactions = await _openBankingService.GetTransactionsByAccountIdAsync(firstAccountId, c);
                     if (transactions == null)
                     {
                         //Console.WriteLine($"[DEBUG] No transactions found for fallback account ID: {firstAccountId}");

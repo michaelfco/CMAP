@@ -34,6 +34,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<ICompanyEndUserRepository, CompanyEndUserRepository>();
         services.AddScoped<ITransactionsRepository, TransactionsRepository>();
         services.AddScoped<ICreditRepository, CreditRepository>();
+        services.AddScoped<IApiSettingsRepository, ApiSettingsRepository>();
 
         services.AddTransient<EmailService>();
 
