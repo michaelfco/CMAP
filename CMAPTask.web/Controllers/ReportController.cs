@@ -17,16 +17,17 @@ namespace OpenBanking.web.Controllers
         private readonly IRiskAnalyzer _riskAnalyzer;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITransactionsRepository _transactionsRepository;
+        private readonly ICompanyEndUserRepository _companyEndUserRepository;
         private readonly OBSettings _settings;
 
-        public ReportController(IRiskAnalyzer riskAnalyzer, IHttpContextAccessor httpContextAccessor, IOptions<OBSettings> options, ITransactionsRepository transactionsRepository)
+        public ReportController(IRiskAnalyzer riskAnalyzer, IHttpContextAccessor httpContextAccessor, IOptions<OBSettings> options, ITransactionsRepository transactionsRepository, ICompanyEndUserRepository companyEndUserRepository)
         {
 
             _riskAnalyzer = riskAnalyzer;
             _httpContextAccessor = httpContextAccessor;
             _settings = options.Value;
             _transactionsRepository = transactionsRepository;
-
+            _companyEndUserRepository = companyEndUserRepository;
         }
 
         [Authorize]
@@ -43,7 +44,7 @@ namespace OpenBanking.web.Controllers
             {
                 PropertyNameCaseInsensitive = true
             });
-
+            var endUser = await _companyEndUserRepository.GetByEndUserIsync(endUserId);
             var view = new AccountTransactionsViewModel
             {
                 AccountId = null,
@@ -52,7 +53,8 @@ namespace OpenBanking.web.Controllers
                 LastUpdated = transaction.LastUpdated,
                 CreatedAt = transaction.CreatedAt,                
                 EndUserId = endUserId,
-                UserId = userId
+                UserId = userId,
+                CustomerName = $"{endUser.FirstName} {endUser.LastName}"
             };
 
             var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked);
@@ -87,6 +89,8 @@ namespace OpenBanking.web.Controllers
                 PropertyNameCaseInsensitive = true
             });
 
+            var endUser = await _companyEndUserRepository.GetByEndUserIsync(endUserId);
+
             var model = new AccountTransactionsViewModel
             {
                 AccountId = null,
@@ -95,7 +99,8 @@ namespace OpenBanking.web.Controllers
                 LastUpdated = transaction.LastUpdated,
                 CreatedAt = transaction.CreatedAt,
                 EndUserId = endUserId,
-                UserId = userId
+                UserId = userId,
+                CustomerName = $"{endUser.FirstName} {endUser.LastName}"
             };
 
             var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked, true);

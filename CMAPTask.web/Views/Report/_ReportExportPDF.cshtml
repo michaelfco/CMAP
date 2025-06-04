@@ -21,242 +21,244 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8" />
+    <title>Transaction Report - @Model.Currency</title>
     <style>
+        @@page {
+            size: A4;
+            margin: 20mm 15mm 20mm 15mm;
+
+            @@top-center {
+                content: "Transaction Report - Confidential";
+                font-size: 10pt;
+                color: #555;
+            }
+
+            @@bottom-center {
+                content: "© OpenBanking Inc.  |  Page " counter(page) " of " counter(pages) "  |  Generated: " date();
+                font-size: 9pt;
+                color: #999;
+            }
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 10pt;
+            color: #222;
             margin: 0;
             padding: 0;
-            color: #333;
-            width: 210mm;
         }
 
         .header {
             text-align: center;
-            padding: 10mm 0;
-            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 15px;
+            position: relative;
         }
 
-            .header h1 {
-                font-size: 20pt;
-                color: #0056b3;
-                margin: 0;
+            .header img {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 40px;
             }
 
-            .header p {
-                font-size: 10pt;
-                color: #6c757d;
-                margin: 5pt 0;
+            .header h1 {
+                font-size: 18pt;
+                margin: 0;
+                color: #1a1a1a;
             }
+
+            .header hr {
+                border: none;
+                height: 1px;
+                background-color: #ccc;
+                margin: 8px 0;
+            }
+
+        .header-details {
+            font-size: 9pt;
+            color: #555;
+            margin-top: 4px;
+        }
 
         .section {
-            margin: 20mm 5mm;
+            margin: 10mm 0;
             page-break-inside: avoid;
         }
 
             .section h2 {
-                font-size: 16pt;
-                color: #0056b3;
-                margin-bottom: 10pt;
-            }
-
-            .section h3 {
                 font-size: 14pt;
-                color: #0056b3;
-                margin-bottom: 8pt;
+                color: #1a1a1a;
+                margin-bottom: 6pt;
+                font-weight: 600;
             }
 
-        .summary-item {
-            font-size: 10pt;
-            margin-bottom: 5pt;
-        }
-
-        .text-success {
-            color: #28a745;
-        }
-
-        .text-danger {
-            color: #dc3545;
-        }
-
-        .text-info {
-            color: #17a2b8;
-        }
-
-        .text-warning {
-            color: #ffc107;
-        }
-
-        table.transactions-table {
+        table.data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20pt;
-            page-break-inside: auto;
+            margin-bottom: 10pt;
         }
 
-        .transactions-table th, .transactions-table td {
-            border: 1px solid #dee2e6;
-            padding: 5pt;
+        .data-table th, .data-table td {
+            border: 1px solid #ccc;
+            padding: 6pt 8pt;
             text-align: left;
+        }
+
+        .data-table th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 9pt;
         }
 
-        .transactions-table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-        }
-
-            .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) {
-                width: 18%;
-                padding: 2pt 2pt;
-                font-size: 8.5pt;
+            .transactions-table th, .transactions-table td {
+                border: 1px solid #ccc;
+                padding: 6pt 8pt;
             }
 
-            .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) {
-                width: 10%;
+            .transactions-table th {
+                background-color: #f0f0f0;
+                text-transform: uppercase;
+                font-weight: bold;
+                color: #333;
             }
 
-            .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) {
-                width: 11%;
-            }
-
-            .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) {
-                width: 15%;
-            }
-
-            .transactions-table th:nth-child(5), .transactions-table td:nth-child(5) {
-                width: 25%;
-            }
-
-            .transactions-table th:nth-child(6), .transactions-table td:nth-child(6) {
-                width: 9%;
-            }
-
-            .transactions-table th:nth-child(7), .transactions-table td:nth-child(7) {
-                width: 12%;
+            .transactions-table tbody tr:nth-child(even) {
+                background-color: #f9f9f9;
             }
 
         .table-danger {
-            background-color: #ffe6e6;
+            background-color: #fef0f0 !important;
         }
 
         .risk-high {
-            color: #dc3545;
-            font-weight: bold;
+            color: #a94442;
+            font-weight: 600;
         }
 
         .risk-low {
-            color: #28a745;
-            font-weight: bold;
-        }
-
-        table.summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20mm 5mm;
-        }
-
-        .summary-table td {
-            width: 50%;
-            vertical-align: top;
-            padding: 0 10pt;
-            border: none;
+            color: #3c763d;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
+
+    <!-- HEADER -->
     <div class="header">
-        <h1>Transaction Report for Account (@Model.Currency)</h1>
-        <p>Period: @(Model.CreatedAt?.AddDays(-90).ToString("dd/MM/yyyy") ?? "N/A") - @(DateTime.Now.ToString("dd/MM/yyyy"))</p>
-        <p>Date Generated: @(DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")) BST</p>
+        <img src="/images/logo.png" alt="Company Logo" />
+        <h1>Transaction Report</h1>
+        <div class="header-details">
+            Client: @Model.CustomerName &nbsp;|&nbsp;
+            Currency: @Model.Currency &nbsp;|&nbsp;
+            Period:   @if (Model.CreatedAt.HasValue)
+            {
+                <span class="badge bg-secondary smaller-text">
+                    @(Model.CreatedAt.Value.AddDays(-90).ToString("dd MMM yyyy")) - @(Model.CreatedAt.Value.ToString("dd MMM yyyy"))
+                </span>
+            } &nbsp;|&nbsp;
+            Generated: @(DateTime.Now.ToString("dd MMM yyyy HH:mm")) BST
+        </div>
+        <hr />
     </div>
 
-    <table class="summary-table">
-        <tr>
-            <td>
-                <h2>Summary Metrics</h2>
-                <p class="summary-item"><strong>Total Inflows:</strong> <span class="text-success">@FormatCurrency(Model.RiskSummary.TotalInflows)</span></p>
-                <p class="summary-item"><strong>Total Outflows:</strong> <span class="text-danger">@FormatCurrency(Model.RiskSummary.TotalOutflows)</span></p>
-                <p class="summary-item"><strong>Net Balance:</strong> <span class="text-info">@FormatCurrency(Model.RiskSummary.NetBalance)</span></p>
-                @{
-                    var totalTransactions = Model.Transactions.Transactions.Booked.Count() + Model.Transactions.Transactions.Pending.Count();
-                    var highRiskPercentage = totalTransactions > 0 ? (Model.HighRiskTransactions.Count() * 100.0 / totalTransactions) : 0;
-                }
-                <p class="summary-item"><strong>High-Risk %:</strong> <span class="text-warning">@highRiskPercentage.ToString("F2")%</span></p>
-            </td>
-
-            <td>
-                <h2>Risk Summary</h2>
-                <p class="summary-item"><strong>Risk Level:</strong> @Model.RiskSummary.RiskLevel</p>
-                <p class="summary-item"><strong>High-Value Transactions:</strong> @Model.RiskSummary.HighValueTransactionCount @(Model.RiskSummary.HighValueTransactionCount > 5 ? "(High Risk)" : "")</p>
-                <p class="summary-item"><strong>Total Rent:</strong> @FormatCurrency(Model.RiskSummary.TotalRent)</p>
-                <p class="summary-item"><strong>Total Gambling:</strong> @FormatCurrency(Model.RiskSummary.TotalGambling) @(Model.RiskSummary.TotalGambling > 5000 ? "(High Risk)" : "")</p>
-                <p class="summary-item"><strong>Total Benefits:</strong> @FormatCurrency(Model.RiskSummary.TotalBenefits)</p>
-                <p class="summary-item"><strong>High-Risk Merchants:</strong> @FormatCurrency(Model.RiskSummary.TotalHighRiskMerchant)</p>
-            </td>
-        </tr>
-    </table>
-
-    <div class="section" >
-        <h3>Risk Assessments</h3>
-        <p class="summary-item">
-            <strong>Affordability:</strong>
-            <span class="@(Model.RiskSummary.AffordabilityAssessment.Contains("Affordable") ? "text-success" : "text-danger")">
-                @Model.RiskSummary.AffordabilityAssessment
-            </span>
-        </p>
-        <p class="summary-item">
-            <strong>Insolvency Risk:</strong>
-            <span class="@(Model.RiskSummary.InsolvencyRisk.Contains("Low") ? "text-success" : "text-danger")">
-                @Model.RiskSummary.InsolvencyRisk
-            </span>
-        </p>
+    <!-- SUMMARY SECTION -->
+    <div class="section">
+        <h2>Summary Metrics</h2>
+        <table class="data-table">
+            <tr><th>Metric</th><th>Value</th></tr>
+            <tr><td>Total Inflows</td><td>@FormatCurrency(Model.RiskSummary.TotalInflows)</td></tr>
+            <tr><td>Total Outflows</td><td>@FormatCurrency(Model.RiskSummary.TotalOutflows)</td></tr>
+            <tr><td>Net Balance</td><td>@FormatCurrency(Model.RiskSummary.NetBalance)</td></tr>
+            @{
+                var totalTransactions = Model.Transactions.Transactions.Booked.Count() + Model.Transactions.Transactions.Pending.Count();
+                var highRiskPercentage = totalTransactions > 0 ? (Model.HighRiskTransactions.Count() * 100.0 / totalTransactions) : 0;
+                var totalInflows = Model.RiskSummary.TotalInflows;
+                var totalOutflows = Model.RiskSummary.TotalOutflows;
+                var total = totalInflows + totalOutflows;
+                var inflowsPercentage = total > 0 ? (totalInflows / total) * 100 : 0;
+                var outflowsPercentage = total > 0 ? (totalOutflows / total) * 100 : 0;
+            }
+            <tr><td>High-Risk %</td><td>@highRiskPercentage.ToString("F2")%</td></tr>
+            <tr><td>Inflows vs Outflows</td><td>@inflowsPercentage.ToString("F2")% / @outflowsPercentage.ToString("F2")%</td></tr>
+        </table>
     </div>
 
     <div class="section">
-        <h3>Risk Alerts</h3>
+        <h2>Risk Overview</h2>
+        <table class="data-table">
+            <tr><th>Category</th><th>Value</th></tr>
+            <tr>
+                <td>Risk Level</td>
+                <td style="color:@(Model.RiskSummary.RiskLevel == "High" ? "#a94442" : (Model.RiskSummary.RiskLevel == "Low" ? "#3c763d" : "#333"))">
+                    @Model.RiskSummary.RiskLevel
+                </td>
+            </tr>
+            <tr><td>High-Value Transactions</td><td>@Model.RiskSummary.HighValueTransactionCount @(Model.RiskSummary.HighValueTransactionCount > 5 ? "(High Risk)" : "")</td></tr>
+            <tr><td>Total Rent</td><td>@FormatCurrency(Model.RiskSummary.TotalRent)</td></tr>
+            <tr><td>Total Gambling</td><td>@FormatCurrency(Model.RiskSummary.TotalGambling)</td></tr>
+            <tr><td>High-Risk Merchants</td><td>@FormatCurrency(Model.RiskSummary.TotalHighRiskMerchant)</td></tr>
+            <tr><td>Total Benefits</td><td>@FormatCurrency(Model.RiskSummary.TotalBenefits)</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Risk Assessments</h2>
+        <table class="data-table">
+            <tr><th>Assessment</th><th>Result</th></tr>
+            <tr>
+                <td>Affordability</td>
+                <td style="color:@(Model.RiskSummary.AffordabilityAssessment?.Contains("Affordable") == true ? "#3c763d" : "#a94442")">
+                    @Model.RiskSummary.AffordabilityAssessment
+                </td>
+            </tr>
+            <tr>
+                <td>Insolvency Risk</td>
+                <td style="color:@(Model.RiskSummary.InsolvencyRisk?.Contains("Low") == true ? "#3c763d" : "#a94442")">
+                    @Model.RiskSummary.InsolvencyRisk
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Risk Alerts</h2>
         @if (Model.RiskSummary.RiskAlerts.Any())
         {
-            <ul>
+            <table class="data-table">
+                <tr><th>Alert</th><th>Detail</th></tr>
                 @foreach (var alert in Model.RiskSummary.RiskAlerts)
                 {
-                    <li class="text-danger">@alert</li>
+                    <tr>
+                        <td>@alert.Split(" totaling ")[0]</td>
+                        <td>@alert</td>
+                    </tr>
                 }
-            </ul>
+            </table>
+        }
+        else
+        {
+            <p>No risk alerts detected.</p>
         }
     </div>
 
-    <!-- Combined: Risk Distribution + Inflows vs Outflows -->
-    <table class="summary-table">
-        <tr>
-            <td>
-                <h2>Risk Distribution</h2>
-                <p class="summary-item"><strong>Rent:</strong> @FormatCurrency(Model.RiskSummary.TotalRent)</p>
-                <p class="summary-item"><strong>Gambling:</strong> @FormatCurrency(Model.RiskSummary.TotalGambling)</p>
-                <p class="summary-item"><strong>Benefits:</strong> @FormatCurrency(Model.RiskSummary.TotalBenefits)</p>
-                <p class="summary-item"><strong>High-Risk Merchants:</strong> @FormatCurrency(Model.RiskSummary.TotalHighRiskMerchant)</p>
-            </td>
-            <td>
-                <h2>Inflows vs Outflows</h2>
-                @{
-                    var totalInflows = Model.RiskSummary.TotalInflows;
-                    var totalOutflows = Model.RiskSummary.TotalOutflows;
-                    var total = totalInflows + totalOutflows;
-                    var inflowsPercentage = total > 0 ? (totalInflows / total) * 100 : 0;
-                    var outflowsPercentage = total > 0 ? (totalOutflows / total) * 100 : 0;
-                }
-                <p class="summary-item"><strong>Inflows:</strong> @inflowsPercentage.ToString("F2")%</p>
-                <p class="summary-item"><strong>Outflows:</strong> @outflowsPercentage.ToString("F2")%</p>
-            </td>
-        </tr>
-    </table>
-
-    <!-- Booked Transactions -->
+    <!-- BOOKED TRANSACTIONS -->
     <div class="section" style="page-break-before: always;">
         <h2>Booked Transactions (@Model.Transactions.Transactions.Booked.Count())</h2>
         <table class="transactions-table">
             <thead>
                 <tr>
-                    <th>Transaction ID</th>
+                    <th>ID</th>
                     <th>Date</th>
                     <th>Amount</th>
                     <th>Party</th>
@@ -276,7 +278,7 @@
                                 decimal amount;
                                 var isParsed = decimal.TryParse(transaction.TransactionAmount.Amount, out amount);
                             }
-                            @(isParsed ? FormatCurrency(amount) : transaction.TransactionAmount.Amount)
+                            @(isParsed ? FormatCurrency(amount, transaction.TransactionAmount.Currency) : transaction.TransactionAmount.Amount)
                         </td>
                         <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
                         <td>@transaction.RemittanceInformationUnstructured</td>
@@ -292,13 +294,13 @@
         </table>
     </div>
 
-    <!-- Pending Transactions -->
+    <!-- PENDING TRANSACTIONS -->
     <div class="section">
         <h2>Pending Transactions (@Model.Transactions.Transactions.Pending.Count())</h2>
         <table class="transactions-table">
             <thead>
                 <tr>
-                    <th>Transaction ID</th>
+                    <th>ID</th>
                     <th>Date</th>
                     <th>Amount</th>
                     <th>Party</th>
@@ -318,7 +320,7 @@
                                 decimal amount;
                                 var isParsed = decimal.TryParse(transaction.TransactionAmount.Amount, out amount);
                             }
-                            @(isParsed ? FormatCurrency(amount) : transaction.TransactionAmount.Amount) @transaction.TransactionAmount.Currency
+                            @(isParsed ? FormatCurrency(amount, transaction.TransactionAmount.Currency) : transaction.TransactionAmount.Amount)
                         </td>
                         <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
                         <td>@transaction.RemittanceInformationUnstructured</td>
@@ -333,5 +335,6 @@
             </tbody>
         </table>
     </div>
+
 </body>
 </html>

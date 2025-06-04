@@ -105,9 +105,9 @@ namespace CMAPTask.web.Controllers
         {
             // Log the full callback URL and query parameters
             var fullUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}{Request.QueryString}";
-            Console.WriteLine($"[DEBUG] Callback URL: {fullUrl}");
+            //Console.WriteLine($"[DEBUG] Callback URL: {fullUrl}");
             var queryParams = Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
-            Console.WriteLine($"[DEBUG] Query parameters: {string.Join(", ", queryParams.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
+            //Console.WriteLine($"[DEBUG] Query parameters: {string.Join(", ", queryParams.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
 
             // Check for error parameters
             if (queryParams.ContainsKey("error"))
@@ -120,7 +120,7 @@ namespace CMAPTask.web.Controllers
 
             // Get the session requisition ID
             var sessionRequisitionId = HttpContext.Session.GetString("RequisitionId");
-            Console.WriteLine($"[DEBUG] Session requisition ID: {sessionRequisitionId}");
+            //Console.WriteLine($"[DEBUG] Session requisition ID: {sessionRequisitionId}");
 
             // Get the callback requisition ID
             string callbackRequisitionId = null;
@@ -138,33 +138,33 @@ namespace CMAPTask.web.Controllers
 
             if (string.IsNullOrEmpty(sessionRequisitionId) && string.IsNullOrEmpty(callbackRequisitionId))
             {
-                Console.WriteLine("[DEBUG] No requisition ID found in session or callback.");
+                //Console.WriteLine("[DEBUG] No requisition ID found in session or callback.");
                 return BadRequest("Requisition ID is missing from both session and callback URL.");
             }
 
             // Use session requisition ID
             string requisitionId = sessionRequisitionId ?? callbackRequisitionId;
-            Console.WriteLine($"[DEBUG] Using requisition ID: {requisitionId}");
+            //Console.WriteLine($"[DEBUG] Using requisition ID: {requisitionId}");
 
             try
             {
-                Console.WriteLine($"[DEBUG] Processing requisition ID: {requisitionId}");
+                //Console.WriteLine($"[DEBUG] Processing requisition ID: {requisitionId}");
                 var (accounts, status) = await _openBankingService.GetAccountsByRequisitionIdAsync(requisitionId);
-                Console.WriteLine($"[DEBUG] Requisition {requisitionId} status: {status}");
+                //Console.WriteLine($"[DEBUG] Requisition {requisitionId} status: {status}");
 
                 if (status != "LN")
                 {
-                    Console.WriteLine($"[DEBUG] Requisition {requisitionId} not linked. Status: {status}");
+                    //Console.WriteLine($"[DEBUG] Requisition {requisitionId} not linked. Status: {status}");
                     return BadRequest($"Requisition not linked. Status: {status}");
                 }
 
                 if (accounts == null || !accounts.Any())
                 {
-                    Console.WriteLine($"[DEBUG] No accounts found for requisition ID: {requisitionId}");
+                    //Console.WriteLine($"[DEBUG] No accounts found for requisition ID: {requisitionId}");
                     return View("NoAccounts");
                 }
 
-                Console.WriteLine($"[DEBUG] Found {accounts.Count} accounts for requisition ID: {requisitionId}");
+               // Console.WriteLine($"[DEBUG] Found {accounts.Count} accounts for requisition ID: {requisitionId}");
 
                 // Fetch account details to identify currencies
                 var accountDetailsList = new List<AccountDetails>();
@@ -174,11 +174,11 @@ namespace CMAPTask.web.Controllers
                     {
                         var details = await _openBankingService.GetAccountDetailsAsync(account.Id);
                         accountDetailsList.Add(details);
-                        Console.WriteLine($"[DEBUG] Account {account.Id}: Currency={details.Currency}, IBAN={details.Iban}");
+                        //Console.WriteLine($"[DEBUG] Account {account.Id}: Currency={details.Currency}, IBAN={details.Iban}");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[DEBUG] Failed to fetch details for account {account.Id}: {ex.Message}");
+                        //Console.WriteLine($"[DEBUG] Failed to fetch details for account {account.Id}: {ex.Message}");
                     }
                 }
 
@@ -235,13 +235,13 @@ namespace CMAPTask.web.Controllers
                 }
                 else
                 {
-                    Console.WriteLine("[DEBUG] No GBP account found.");
+                    //Console.WriteLine("[DEBUG] No GBP account found.");
                     // Fallback to first account if GBP not found
                     var firstAccountId = accounts.First().Id;
                     var transactions = await _openBankingService.GetTransactionsByAccountIdAsync(firstAccountId);
                     if (transactions == null)
                     {
-                        Console.WriteLine($"[DEBUG] No transactions found for fallback account ID: {firstAccountId}");
+                        //Console.WriteLine($"[DEBUG] No transactions found for fallback account ID: {firstAccountId}");
                         return View("NoTransactions");
                     }
 
@@ -295,12 +295,12 @@ namespace CMAPTask.web.Controllers
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("404"))
             {
-                Console.WriteLine($"[DEBUG] 404 Error for requisition ID {requisitionId}: {ex.Message}");
+                //Console.WriteLine($"[DEBUG] 404 Error for requisition ID {requisitionId}: {ex.Message}");
                 return StatusCode(404, $"Requisition ID {requisitionId} not found.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DEBUG] Error processing requisition ID {requisitionId}: {ex.Message}\nStack Trace: {ex.StackTrace}");
+                //Console.WriteLine($"[DEBUG] Error processing requisition ID {requisitionId}: {ex.Message}\nStack Trace: {ex.StackTrace}");
                 return StatusCode(500, $"Error processing requisition: {ex.Message}");
             }
         }

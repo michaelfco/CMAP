@@ -14,5 +14,6 @@ namespace OpenBanking.web.ViewModel
 
         public Guid EndUserId { get; set; }
         public Guid UserId { get; set; }
+        public string CustomerName { get; set; }
     }
 }
