@@ -1,5 +1,6 @@
 ﻿using CMAPTask.web.ViewModel;
 using Microsoft.AspNetCore.Mvc;
+using OpenBanking.web.ViewModel;
 using System.Text.Json;
 
 namespace CMAPTask.web.Controllers

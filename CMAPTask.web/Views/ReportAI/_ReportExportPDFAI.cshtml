@@ -1,0 +1,354 @@
+﻿@using Microsoft.AspNetCore.Html
+@model OpenBanking.web.ViewModel.AccountTransactionsAIViewModel
+
+@{
+    Layout = null;
+}
+
+@functions {
+    public string FormatDateSafe(string dateStr, string format = "dd/MM/yyyy")
+    {
+        if (DateTime.TryParse(dateStr, out var date))
+            return date.ToString(format);
+        return dateStr ?? "N/A";
+    }
+    public string FormatCurrency(string amountStr, string currency = "EUR")
+    {
+        if (decimal.TryParse(amountStr, out decimal amount))
+        {
+            return $"{amount:N2} {currency}";
+        }
+        return amountStr ?? "N/A";
+    }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            width: 210mm;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10mm 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+            .header h1 {
+                font-size: 20pt;
+                color: #0056b3;
+                margin: 0;
+            }
+
+            .header p {
+                font-size: 10pt;
+                color: #6c757d;
+                margin: 5pt 0;
+            }
+
+        .section {
+            margin: 20mm 5mm;
+            page-break-inside: avoid;
+        }
+
+            .section h2 {
+                font-size: 16pt;
+                color: #0056b3;
+                margin-bottom: 10pt;
+            }
+
+            .section h3 {
+                font-size: 14pt;
+                color: #0056b3;
+                margin-bottom: 8pt;
+            }
+
+        .summary-item {
+            font-size: 10pt;
+            margin-bottom: 5pt;
+        }
+
+        .text-success {
+            color: #28a745;
+        }
+
+        .text-danger {
+            color: #dc3545;
+        }
+
+        .text-info {
+            color: #17a2b8;
+        }
+
+        .text-warning {
+            color: #ffc107;
+        }
+
+        table.transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20pt;
+            page-break-inside: auto;
+        }
+
+        .transactions-table th, .transactions-table td {
+            border: 1px solid #dee2e6;
+            padding: 5pt;
+            text-align: left;
+            font-size: 9pt;
+        }
+
+        .transactions-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+            .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) {
+                width: 18%;
+                padding: 2pt 2pt;
+                font-size: 8.5pt;
+            }
+
+            .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) {
+                width: 10%;
+            }
+
+            .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) {
+                width: 11%;
+            }
+
+            .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) {
+                width: 15%;
+            }
+
+            .transactions-table th:nth-child(5), .transactions-table td:nth-child(5) {
+                width: 25%;
+            }
+
+            .transactions-table th:nth-child(6), .transactions-table td:nth-child(6) {
+                width: 9%;
+            }
+
+            .transactions-table th:nth-child(7), .transactions-table td:nth-child(7) {
+                width: 12%;
+            }
+
+        .table-danger {
+            background-color: #ffe6e6;
+        }
+
+        .risk-high {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .risk-low {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        table.summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20mm 5mm;
+        }
+
+        .summary-table td {
+            width: 50%;
+            vertical-align: top;
+            padding: 0 10pt;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AI-Enhanced Transaction Report for Account (@Model.Currency)</h1>
+        <p>Period: @(Model.CreatedAt?.AddDays(-90).ToString("dd/MM/yyyy") ?? "N/A") - @(DateTime.Now.ToString("dd/MM/yyyy"))</p>
+        <p>Date Generated: @(DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")) BST</p>
+    </div>
+
+    <table class="summary-table">
+        <tr>
+            <td>
+                <h2>Summary Metrics</h2>
+                <p class="summary-item"><strong>Total Inflows:</strong> <span class="text-success">@FormatCurrency(Model.RiskSummary.TotalInflows.ToString())</span></p>
+                <p class="summary-item"><strong>Total Outflows:</strong> <span class="text-danger">@FormatCurrency(Model.RiskSummary.TotalOutflows.ToString())</span></p>
+                <p class="summary-item"><strong>Net Balance:</strong> <span class="text-info">@FormatCurrency(Model.RiskSummary.NetBalance.ToString())</span></p>
+                @{
+                    var totalTransactions = Model.Transactions.Transactions.Booked.Count() + Model.Transactions.Transactions.Pending.Count();
+                    var highRiskPercentage = totalTransactions > 0 ? (Model.HighRiskTransactions.Count() * 100.0 / totalTransactions) : 0;
+                }
+                <p class="summary-item"><strong>High-Risk %:</strong> <span class="text-warning">@highRiskPercentage.ToString("F2")%</span></p>
+            </td>
+
+            <td>
+                <h2>Risk Summary</h2>
+                <p class="summary-item"><strong>Risk Level:</strong> @Model.RiskSummary.RiskLevel</p>
+                <p class="summary-item"><strong>High-Value Transactions:</strong> @Model.RiskSummary.HighValueTransactionCount @(Model.RiskSummary.HighValueTransactionCount > 5 ? "(High Risk)" : "")</p>
+                <p class="summary-item"><strong>Total Rent:</strong> @FormatCurrency(Model.RiskSummary.TotalRent.ToString())</p>
+                <p class="summary-item"><strong>Total Gambling:</strong> @FormatCurrency(Model.RiskSummary.TotalGambling.ToString()) @(Model.RiskSummary.TotalGambling > 5000 ? "(High Risk)" : "")</p>
+                <p class="summary-item"><strong>Total Benefits:</strong> @FormatCurrency(Model.RiskSummary.TotalBenefits.ToString())</p>
+                <p class="summary-item"><strong>High-Risk Merchants:</strong> @FormatCurrency(Model.RiskSummary.TotalHighRiskMerchant.ToString())</p>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section">
+        <h3>AI Risk Assessment</h3>
+        <p class="summary-item"><strong>Risk Score:</strong> @Model.RiskAssessment.RiskScorePercentage.ToString("F2")%</p>
+        <p class="summary-item"><strong>Risk Factors:</strong></p>
+        <ul>
+            @foreach (var factor in Model.RiskAssessment.RiskFactors)
+            {
+                <li class="text-danger">@factor</li>
+            }
+        </ul>
+        <p class="summary-item"><strong>Recommendations:</strong></p>
+        <ul>
+            @foreach (var recommendation in Model.RiskAssessment.Recommendations)
+            {
+                <li class="text-info">@recommendation</li>
+            }
+        </ul>
+    </div>
+
+    <div class="section">
+        <h3>Risk Assessments</h3>
+        <p class="summary-item">
+            <strong>Affordability:</strong>
+            <span class="@(Model.RiskSummary.AffordabilityAssessment.Contains("Affordable") ? "text-success" : "text-danger")">
+                @Model.RiskSummary.AffordabilityAssessment
+            </span>
+        </p>
+        <p class="summary-item">
+            <strong>Insolvency Risk:</strong>
+            <span class="@(Model.RiskSummary.InsolvencyRisk.Contains("Low") ? "text-success" : "text-danger")">
+                @Model.RiskSummary.InsolvencyRisk
+            </span>
+        </p>
+    </div>
+
+    <div class="section">
+        <h3>Risk Alerts</h3>
+        @if (Model.RiskSummary.RiskAlerts.Any())
+        {
+            <ul>
+                @foreach (var alert in Model.RiskSummary.RiskAlerts)
+                {
+                    <li class="text-danger">@alert</li>
+                }
+            </ul>
+        }
+    </div>
+
+    <!-- Combined: Risk Distribution + Inflows vs Outflows -->
+    <table class="summary-table">
+        <tr>
+            <td>
+                <h2>Risk Distribution</h2>
+                <p class="summary-item"><strong>Rent:</strong> @FormatCurrency(Model.RiskSummary.TotalRent.ToString())</p>
+                <p class="summary-item"><strong>Gambling:</strong> @FormatCurrency(Model.RiskSummary.TotalGambling.ToString())</p>
+                <p class="summary-item"><strong>Benefits:</strong> @FormatCurrency(Model.RiskSummary.TotalBenefits.ToString())</p>
+                <p class="summary-item"><strong>High-Risk Merchants:</strong> @FormatCurrency(Model.RiskSummary.TotalHighRiskMerchant.ToString())</p>
+            </td>
+            <td>
+                <h2>Inflows vs Outflows</h2>
+                @{
+                    var totalInflows = Model.RiskSummary.TotalInflows;
+                    var totalOutflows = Model.RiskSummary.TotalOutflows;
+                    var total = totalInflows + totalOutflows;
+                    var inflowsPercentage = total > 0 ? (totalInflows / total) * 100 : 0;
+                    var outflowsPercentage = total > 0 ? (totalOutflows / total) * 100 : 0;
+                }
+                <p class="summary-item"><strong>Inflows:</strong> @inflowsPercentage.ToString("F2")%</p>
+                <p class="summary-item"><strong>Outflows:</strong> @outflowsPercentage.ToString("F2")%</p>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Booked Transactions -->
+    <div class="section" style="page-break-before: always;">
+        <h2>Booked Transactions (@Model.Transactions.Transactions.Booked.Count())</h2>
+        <table class="transactions-table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Party</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var transaction in Model.Transactions.Transactions.Booked)
+                {
+                    var isHighRisk = Model.HighRiskTransactions.Any(ht => ht.TransactionId == transaction.TransactionId);
+                    <tr class="@(isHighRisk ? "table-danger" : "")">
+                        <td>@transaction.TransactionId</td>
+                        <td>@FormatDateSafe(transaction.BookingDateString)</td>
+                        <td>
+                            @FormatCurrency(transaction.TransactionAmount?.Amount, transaction.TransactionAmount?.Currency)
+                        </td>
+                        <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
+                        <td>@transaction.RemittanceInformationUnstructured</td>
+                        <td>@transaction.ProprietaryBankTransactionCode</td>
+                        <td>
+                            <span class="@(isHighRisk ? "risk-high" : "risk-low")">
+                                @(isHighRisk ? "High Risk" : "Low Risk")
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pending Transactions -->
+    <div class="section">
+        <h2>Pending Transactions (@Model.Transactions.Transactions.Pending.Count())</h2>
+        <table class="transactions-table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Party</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var transaction in Model.Transactions.Transactions.Pending)
+                {
+                    var isHighRisk = Model.HighRiskTransactions.Any(ht => ht.TransactionId == transaction.TransactionId);
+                    <tr class="@(isHighRisk ? "table-danger" : "")">
+                        <td>@transaction.TransactionId</td>
+                        <td>@FormatDateSafe(transaction.BookingDateString)</td>
+                        <td>
+                            @FormatCurrency(transaction.TransactionAmount?.Amount, transaction.TransactionAmount?.Currency)
+                        </td>
+                        <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
+                        <td>@transaction.RemittanceInformationUnstructured</td>
+                        <td>@transaction.ProprietaryBankTransactionCode</td>
+                        <td>
+                            <span class="@(isHighRisk ? "risk-high" : "risk-low")">
+                                @(isHighRisk ? "High Risk" : "Low Risk")
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -4,6 +4,8 @@ using CMAPTask.Infrastructure;
 using CMAPTask.Infrastructure.Extensions;
 using CMAPTask.Infrastructure.Services;
 using CMAPTask.web;
+using OpenBanking.Domain.Entities.Model;
+using Rotativa.AspNetCore;
 using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,6 +41,7 @@ builder.Services.AddHttpClient<OpenBankingService>(client =>
 });
 
 builder.Services.AddDistributedMemoryCache();
+RotativaConfiguration.Setup("wwwroot", "Rotativa");
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(10);
@@ -46,7 +49,16 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+builder.Services.AddAuthentication("MyCookieAuth")
+    .AddCookie("MyCookieAuth", options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+    });
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddAuthorization();
 
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 var app = builder.Build();
 
@@ -63,6 +75,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

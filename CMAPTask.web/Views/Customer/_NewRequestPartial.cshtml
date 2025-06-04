@@ -1,0 +1,41 @@
+﻿@model CMAPTask.Domain.Entities.OB.CustomerDetails
+@{
+    Layout = null;
+}
+
+<form id="newRequestForm" asp-action="SubmitDetails" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-4">
+        <div class="col">
+            <div class="bg-light rounded h-100 p-4">
+                <h6 class="mb-4">Enter Customer's Details</h6>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="FirstName" class="form-control" placeholder="First Name" />
+                    <label asp-for="FirstName">First Name</label>
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="LastName" class="form-control" placeholder="Last Name" />
+                    <label asp-for="LastName">Last Name</label>
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Email" type="email" class="form-control" placeholder="name@example.com" />
+                    <label asp-for="Email">Email address</label>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="Phone Number" />
+                    <label asp-for="PhoneNumber">Phone Number</label>
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Send Request</button>
+            </div>
+        </div>
+    </div>
+</form> 

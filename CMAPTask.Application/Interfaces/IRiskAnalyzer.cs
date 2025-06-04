@@ -9,6 +9,7 @@ namespace CMAPTask.Application.Interfaces
 {
     public interface IRiskAnalyzer
     {
-        (RiskSummary, List<Transaction>) AnalyzeTransactions(List<Transaction> transactions);
+        (RiskSummary, List<Transaction>) AnalyzeTransactions(List<Transaction> transactions, bool? printLayout = false);
+      
     }
 }

@@ -13,7 +13,7 @@ namespace CMAPTask.Application.UseCases
         private readonly HashSet<string> RentKeywords = new() { "Rent", "Victoria Embankment", "Liam Brown" };
         private readonly HashSet<string> BenefitsKeywords = new() { "Benefit", "Government", "Welfare" };
 
-        public (RiskSummary, List<Transaction>) AnalyzeTransactions(List<Transaction> transactions)
+        public (RiskSummary, List<Transaction>) AnalyzeTransactions(List<Transaction> transactions, bool? printLayout = false)
         {
             var summary = new RiskSummary();
             var highRiskTransactions = new List<Transaction>();
@@ -115,25 +115,29 @@ namespace CMAPTask.Application.UseCases
             summary.TotalHighRiskMerchant = totalHighRiskMerchant;
 
             // Set insolvency and affordability assessments on summary
-            summary.InsolvencyRisk = CheckInsolvencyRisk(summary);
+            summary.InsolvencyRisk = CheckInsolvencyRisk(summary, printLayout);
             summary.AffordabilityAssessment = EstimateAffordability(summary);
 
             return (summary, highRiskTransactions);
         }
 
-        public string CheckInsolvencyRisk(RiskSummary summary)
+        public string CheckInsolvencyRisk(RiskSummary summary, bool? printLayout = false)
         {
+            var sign = "⚠️ ";
+            if (printLayout == true)
+                sign = "";
+            
             if (summary.TotalOutflows > summary.TotalInflows)
-                return "⚠️ Spending exceeds income — risk of insolvency.";
+                return $"{sign} Spending exceeds income — risk of insolvency.";
 
             if (summary.NetBalance < 0)
-                return "⚠️ Negative net balance — customer may be overdrawn.";
+                return $"{sign} Negative net balance — customer may be overdrawn.";
 
             if (summary.TotalRent > summary.TotalInflows * 0.5m)
-                return "⚠️ Rent expenses exceed 50% of income — unsustainable housing cost.";
+                return $"{sign} Rent expenses exceed 50% of income — unsustainable housing cost.";
 
             if (summary.RiskLevel == "High")
-                return "⚠️ High-risk behavior detected — review recommended.";
+                return $"{sign} High-risk behavior detected — review recommended.";
 
             return "✅ No strong signs of insolvency.";
         }

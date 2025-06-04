@@ -1,0 +1,26 @@
+﻿@{
+    Layout = "_LayoutClean";
+    ViewData["Title"] = "Consent complete";
+    var link = ViewBag.BankLink as string;
+}
+
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: white; /* ensures no default background */
+    }
+</style>
+
+<div class="container-xxl d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="text-center">
+        <h2 class="text-success mb-3">You're All Set!</h2>
+        <p class="lead mb-4">Your bank consent has been successfully completed.</p>
+
+        <a href="#" class="btn btn-primary btn-lg">
+            Go to Home
+        </a>
+       
+    </div>
+</div>

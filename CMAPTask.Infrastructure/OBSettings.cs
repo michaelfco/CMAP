@@ -12,5 +12,6 @@ namespace CMAPTask.Infrastructure
         public string SecretKey { get; set; } = null!;
         public string TokenURL { get; set; } = null!;
         public string BaseURL { get; set; } = null!;
+        public string SiteBaseURL { get; set; } = null!;
     }
 }

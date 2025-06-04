@@ -1,9 +1,17 @@
 ﻿using CMAPTask.Application.Interfaces;
 using CMAPTask.Domain.Entities.OB;
-using CMAPTask.web.ViewModel;
+using CMAPTask.Infrastructure;
+using OpenBanking.web.ViewModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using OpenBanking.Application.Interfaces;
+using OpenBanking.Domain.Entities.OB;
+using OpenBanking.Infrastructure.Extensions;
+using OpenBanking.Infrastructure.Services;
 using System.Net.Http;
 using System.Text.Json;
+using static OpenBanking.Domain.Enums.Enum;
+using Transaction = OpenBanking.Domain.Entities.OB.Transaction;
 
 namespace CMAPTask.web.Controllers
 {
@@ -11,11 +19,21 @@ namespace CMAPTask.web.Controllers
     {
         private readonly IOpenBankingService _openBankingService;
         private readonly IRiskAnalyzer _riskAnalyzer;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly OBSettings _settings;
+        private readonly ITransactionsRepository _transactionsRepository;
+        private readonly EmailService _emailService;
+        private readonly ICreditRepository _creditRepository;
 
-        public StartConsentController(IOpenBankingService openBankingService, IRiskAnalyzer riskAnalyzer)
+        public StartConsentController(IOpenBankingService openBankingService, IRiskAnalyzer riskAnalyzer, IHttpContextAccessor httpContextAccessor, IOptions<OBSettings> options, ITransactionsRepository transactionsRepository, EmailService emailService, ICreditRepository creditRepository)
         {
             _openBankingService = openBankingService;
             _riskAnalyzer = riskAnalyzer;
+            _httpContextAccessor = httpContextAccessor;
+            _settings = options.Value;
+            _transactionsRepository = transactionsRepository;
+            _emailService = emailService;
+            _creditRepository = creditRepository;
         }
 
         public IActionResult Index()
@@ -23,7 +41,7 @@ namespace CMAPTask.web.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Consent(string institutionId)
+        public async Task<IActionResult> Consent(string institutionId, string u, string c)
         {
             institutionId = "SANDBOXFINANCE_SFIN0000";
             if (string.IsNullOrEmpty(institutionId))
@@ -41,7 +59,7 @@ namespace CMAPTask.web.Controllers
                 return StatusCode(500, "Failed to create agreement");
             }
 
-            var redirectUri = "https://localhost:7210/StartConsent/ConsentCallback";
+            var redirectUri = $"{_settings.SiteBaseURL}StartConsent/ConsentCallback?u={u}&c={c}&a={agreementId}";
             Console.WriteLine($"[DEBUG] Using redirect URI: {redirectUri}");
 
             var requisition = await _openBankingService.CreateRequisitionAsync(
@@ -75,12 +93,15 @@ namespace CMAPTask.web.Controllers
         }
 
 
-
+        public async Task<IActionResult> Invalid()
+        {
+            return View();
+        }
 
 
 
         [HttpGet]
-        public async Task<IActionResult> ConsentCallback()
+        public async Task<IActionResult> ConsentCallback(string u, string c, string a)
         {
             // Log the full callback URL and query parameters
             var fullUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}{Request.QueryString}";
@@ -179,15 +200,38 @@ namespace CMAPTask.web.Controllers
                         LastUpdated = transactions.Transactions.LastUpdated
                     };
 
-                    var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked);
-                    viewModel.RiskSummary = riskSummary;
-                    viewModel.HighRiskTransactions = highRiskTransactions;
+                    var transactionsJson = JsonSerializer.Serialize(transactions, new JsonSerializerOptions
+                    {
+                        WriteIndented = false
+                    });
 
-                    Console.WriteLine($"[DEBUG] Risk analysis: Level={riskSummary.RiskLevel}, Alerts={riskSummary.RiskAlerts.Count}");
-                    //TempData["TransactionsViewModel"] = JsonSerializer.Serialize(viewModel);
-                    HttpContext.Session.SetString("TransactionsViewModel", JsonSerializer.Serialize(viewModel));
-                    return View("DisplayTransactions",viewModel);
-                    //return View("~/Views/Transactions/DisplayTransactions.cshtml", viewModel);
+                    if (!Guid.TryParse(u, out Guid endUserId) || !Guid.TryParse(callbackRequisitionId, out Guid refId) || !Guid.TryParse(sessionRequisitionId, out Guid reqId) || !Guid.TryParse(a, out Guid agreementId))
+                    {
+                        return View("Invalid");
+                    }
+
+                    var userId = User.GetUserId();
+
+                    var entity = new Transaction
+                    {
+                        UserId = userId,
+                        JsonData = transactionsJson,
+                        Currency = viewModel.Currency,
+                        LastUpdated = DateTime.UtcNow,
+                        Reference = refId,
+                        ConsentId = reqId,
+                        AgreementId = agreementId,
+                        EndUserId = endUserId
+
+                    };
+
+                    var transactionId = await _transactionsRepository.SaveAsync(entity);
+                    await _creditRepository.UpdateCreditUsage(endUserId, transactionId);
+                    await _transactionsRepository.UpdateStatusRequest(endUserId);  
+                    
+                  
+                    return View("TransactionCompleted");
+                   
                 }
                 else
                 {
@@ -261,39 +305,11 @@ namespace CMAPTask.web.Controllers
             }
         }
 
-
-        public IActionResult DisplayTransactions()
+        public IActionResult TransactionCompleted()
         {
-            var viewModelJson = HttpContext.Session.GetString("TransactionsViewModel");
-            if (string.IsNullOrEmpty(viewModelJson))
-            {
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var viewModel = JsonSerializer.Deserialize<AccountTransactionsViewModel>(viewModelJson, options);
-                if (viewModel == null)
-                {
-                    Console.WriteLine("[DEBUG] Failed to deserialize TransactionsViewModel from TempData.");
-                    return StatusCode(500, "Failed to load transaction data.");
-                }
-
-                Console.WriteLine($"[DEBUG] Rendering Transactions view for account {viewModel.AccountId} (Currency: {viewModel.Currency})");
-                Console.WriteLine($"[DEBUG] Risk Summary: Level={viewModel.RiskSummary.RiskLevel}, Inflows={viewModel.RiskSummary.TotalInflows}, Outflows={viewModel.RiskSummary.TotalOutflows}, Net={viewModel.RiskSummary.NetBalance}");
-                return View("DisplayTransactions", viewModel);
-            }
-
-            Console.WriteLine("[DEBUG] No TransactionsViewModel found in TempData.");
-            return BadRequest("No transaction data available.");
-        }
-
-        //public async Task<IActionResult> ShowTransactions(string accountId)
-        //{
-        //    if (string.IsNullOrEmpty(accountId))
-        //        return BadRequest("Account ID is required");
-
-        //    var transactionsResponse = await _openBankingService.GetTransactionsByAccountIdAsync(accountId);
-
-        //    // You could pass the booked transactions to the view
-        //    return View("Transactions", transactionsResponse.Transactions.Booked);
-        //}
+            return View();
+        }   
+       
 
     }
 
