@@ -43,19 +43,20 @@ namespace OpenBanking.Infrastructure.Repository
         public async Task<Transaction> GetCompleteTransactionAsync(Guid endUserId, Guid userId)
         {
             var sql = @"SELECT * FROM Transactions 
-                       WHERE EndUserId = @endUserId 
-                       AND UserId = @userId                       
-
-                       AND (IsDeleted IS NULL OR IsDeleted = 0)";
+                WHERE EndUserId = @endUserId 
+                AND (IsDeleted IS NULL OR IsDeleted = 0)";
 
             var parameters = new DynamicParameters();
             parameters.Add("endUserId", endUserId);
-            parameters.Add("userId", userId);            
+
+            if (userId != Guid.Empty)
+            {
+                sql += " AND UserId = @userId";
+                parameters.Add("userId", userId);
+            }
 
             return await _repo.QueryFirstOrDefaultAsync<Transaction>(sql, parameters);
         }
-
-
 
     }
 }
