@@ -29,6 +29,7 @@ public static class ApplicationServiceExtension
         services.AddScoped<IOpenBankingService, OpenBankingService>();
         services.AddScoped<OBTokenService>();
         services.AddScoped<IRiskAnalyzer, RiskAnalyzer>();
+        services.AddScoped<IRiskAnalyzerAI, RiskAnalyzerAI>();
         services.AddScoped<IDapperGenericRepository, DapperGenericRepository>();
         services.AddScoped<ICompanyEndUserRepository, CompanyEndUserRepository>();
         services.AddScoped<ITransactionsRepository, TransactionsRepository>();

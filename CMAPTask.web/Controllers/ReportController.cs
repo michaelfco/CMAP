@@ -2,7 +2,7 @@
 using CMAPTask.Domain.Entities.OB;
 using CMAPTask.Infrastructure;
 using CMAPTask.Infrastructure.Services;
-using CMAPTask.web.ViewModel;
+using OpenBanking.web.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -66,43 +66,7 @@ namespace OpenBanking.web.Controllers
             return View("Index", view);
         }
 
-        [Authorize]
-        public async Task<IActionResult> Index2(string eid, string uid)
-        {
-            if (!Guid.TryParse(eid, out Guid endUserId) || !Guid.TryParse(uid, out Guid userId))
-            {
-                return View("Invalid");
-            }
-
-            var transaction = await _transactionsRepository.GetCompleteTransactionAsync(endUserId, userId);
-
-            var transactions = JsonSerializer.Deserialize<TransactionResponse>(transaction.JsonData, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            var view = new AccountTransactionsViewModel
-            {
-                AccountId = null,
-                Currency = transaction.Currency,
-                Transactions = transactions,
-                LastUpdated = transaction.LastUpdated,
-                CreatedAt = transaction.CreatedAt,
-                EndUserId = endUserId,
-                UserId = userId
-            };
-
-            var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked);
-            view.RiskSummary = riskSummary;
-            view.HighRiskTransactions = highRiskTransactions;
-
-            // ✅ Now render the view using the actual model from the DB
-            Console.WriteLine($"[DEBUG] Rendering Transactions view for account {view.AccountId} (Currency: {view.Currency})");
-            Console.WriteLine($"[DEBUG] Risk Summary: Level={view.RiskSummary.RiskLevel}, Inflows={view.RiskSummary.TotalInflows}, Outflows={view.RiskSummary.TotalOutflows}, Net={view.RiskSummary.NetBalance}");
-
-            return View("Index", view);
-        }
-
+     
 
         [Authorize]
         public async Task<IActionResult> ExportToPDF(string eid, string uid)

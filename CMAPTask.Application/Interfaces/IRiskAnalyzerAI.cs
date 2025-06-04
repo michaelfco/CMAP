@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace CMAPTask.Application.Interfaces
 {
-    public interface IRiskAnalyzer
-    {
-        (RiskSummary, List<Transaction>) AnalyzeTransactions(List<Transaction> transactions, bool? printLayout = false);
-      
+    public interface IRiskAnalyzerAI
+    {   
+
+        (RiskSummaryAI, List<TransactionAI>) AnalyzeTransactionsAI(List<TransactionAI> transactions, bool? printLayout = false);
     }
 }

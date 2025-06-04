@@ -1,7 +1,7 @@
 ﻿using CMAPTask.Application.Interfaces;
 using CMAPTask.Domain.Entities.OB;
 using CMAPTask.Infrastructure;
-using CMAPTask.web.ViewModel;
+using OpenBanking.web.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using OpenBanking.Application.Interfaces;

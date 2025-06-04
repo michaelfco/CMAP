@@ -1,6 +1,6 @@
 ﻿using CMAPTask.Domain.Entities.OB;
 
-namespace CMAPTask.web.ViewModel
+namespace OpenBanking.web.ViewModel
 {
     public class AccountTransactionsViewModel
     {
@@ -9,7 +9,7 @@ namespace CMAPTask.web.ViewModel
         public TransactionResponse Transactions { get; set; } = new TransactionResponse();
         public DateTime LastUpdated { get; set; }
         public DateTime? CreatedAt { get; set; }
-        public RiskSummary RiskSummary { get; set; } = new RiskSummary();
+        public CMAPTask.Domain.Entities.OB.RiskSummary RiskSummary { get; set; } = new CMAPTask.Domain.Entities.OB.RiskSummary();
         public List<Transaction> HighRiskTransactions { get; set; } = new List<Transaction>();
 
         public Guid EndUserId { get; set; }

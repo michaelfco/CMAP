@@ -296,7 +296,7 @@
                         <td>@transaction.TransactionId</td>
                         <td>@FormatDateSafe(transaction.BookingDateString)</td>
                         <td>
-                            @FormatCurrency(transaction.TransactionAmount.Amount, transaction.TransactionAmount.Currency)
+                            @FormatCurrency(transaction.TransactionAmount?.Amount, transaction.TransactionAmount?.Currency)
                         </td>
                         <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
                         <td>@transaction.RemittanceInformationUnstructured</td>
@@ -335,7 +335,7 @@
                         <td>@transaction.TransactionId</td>
                         <td>@FormatDateSafe(transaction.BookingDateString)</td>
                         <td>
-                            @FormatCurrency(transaction.TransactionAmount.Amount, transaction.TransactionAmount.Currency)
+                            @FormatCurrency(transaction.TransactionAmount?.Amount, transaction.TransactionAmount?.Currency)
                         </td>
                         <td>@(transaction.CreditorName ?? transaction.DebtorName ?? "Unknown")</td>
                         <td>@transaction.RemittanceInformationUnstructured</td>
