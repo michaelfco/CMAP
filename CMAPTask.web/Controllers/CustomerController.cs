@@ -10,12 +10,13 @@ using OpenBanking.Domain.Entities.OB;
 using OpenBanking.Domain.Enums;
 using OpenBanking.Infrastructure.Extensions;
 using OpenBanking.Infrastructure.Services;
+using OpenBanking.web.Controllers;
 using OpenBanking.web.ViewModel;
 using static OpenBanking.Domain.Enums.Enum;
 
 namespace CMAPTask.web.Controllers
 {
-    public class CustomerController : Controller
+    public class CustomerController : BaseController
     {
         private readonly OBDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -26,7 +27,7 @@ namespace CMAPTask.web.Controllers
 
 
 
-        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor, ICompanyEndUserRepository companyUserRepository, IOptions<OBSettings> options, EmailService emailService, ICreditRepository creditRepository)
+        public CustomerController(OBDbContext context, IHttpContextAccessor httpContextAccessor, ICompanyEndUserRepository companyUserRepository, IOptions<OBSettings> options, EmailService emailService, ICreditRepository creditRepository) : base(creditRepository)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;

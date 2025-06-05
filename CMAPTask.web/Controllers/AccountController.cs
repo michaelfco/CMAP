@@ -16,7 +16,7 @@ namespace OpenBanking.web.Controllers
 
         public AccountController(OBDbContext db)
         {
-            _db = db;        
+            _db = db;         
           
         }
 
