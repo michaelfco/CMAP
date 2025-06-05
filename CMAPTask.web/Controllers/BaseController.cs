@@ -24,8 +24,8 @@ public abstract class BaseController : Controller
             if (Guid.TryParse(userIdClaim, out Guid userId))
             {
                 var credit = await _creditRepository.GetCreditUsage(userId);
-                ViewBag.Active = credit.ActiveCredit;
-                ViewBag.Pending = credit.PendingCredit;
+                ViewBag.Active = credit?.ActiveCredit ?? 0;
+                ViewBag.Pending = credit?.PendingCredit ?? 0;
             }
             else
             {
