@@ -38,7 +38,7 @@ namespace CMAPTask.web.Controllers
         }
 
 
-        [Authorize(Roles = Constants.Roles.Admin)]
+        [Authorize]
         [Route("Customer/dashboard")]
         public async Task<IActionResult> Index()
         {

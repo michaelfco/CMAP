@@ -10,25 +10,27 @@ using OpenBanking.Application.Interfaces;
 using OpenBanking.Infrastructure.Services;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using OpenBanking.Infrastructure.Repository;
 
 namespace OpenBanking.web.Controllers
 {
-    public class ReportController : Controller
+    public class ReportController : BaseController
     {
         private readonly IRiskAnalyzer _riskAnalyzer;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITransactionsRepository _transactionsRepository;
         private readonly ICompanyEndUserRepository _companyEndUserRepository;
         private readonly OBSettings _settings;
+        private readonly ICreditRepository _creditRepository;
 
-        public ReportController(IRiskAnalyzer riskAnalyzer, IHttpContextAccessor httpContextAccessor, IOptions<OBSettings> options, ITransactionsRepository transactionsRepository, ICompanyEndUserRepository companyEndUserRepository)
-        {
-
+        public ReportController(IRiskAnalyzer riskAnalyzer, IHttpContextAccessor httpContextAccessor, IOptions<OBSettings> options, ITransactionsRepository transactionsRepository, ICompanyEndUserRepository companyEndUserRepository, ICreditRepository creditRepository) : base(creditRepository)
+        {           
             _riskAnalyzer = riskAnalyzer;
             _httpContextAccessor = httpContextAccessor;
             _settings = options.Value;
             _transactionsRepository = transactionsRepository;
             _companyEndUserRepository = companyEndUserRepository;
+            _creditRepository = creditRepository;
         }
 
         [Authorize]
@@ -74,9 +76,16 @@ namespace OpenBanking.web.Controllers
         [Authorize]
         public async Task<IActionResult> ExportToPDF(string eid, string uid)
         {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
             if (!Guid.TryParse(eid, out Guid endUserId) || !Guid.TryParse(uid, out Guid userId))
             {
                 return NotFound("Invalid end user ID or user ID.");
+            }
+
+            if(userIdClaim != userId.ToString())
+            {
+                return NotFound("Invalid end user ID or user ID.");
+
             }
 
             var transaction = await _transactionsRepository.GetCompleteTransactionAsync(endUserId, userId);
