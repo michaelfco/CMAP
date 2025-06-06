@@ -57,27 +57,30 @@ namespace OpenBanking.Infrastructure.Repository
         public async Task<CreditDto> GetCreditUsage(Guid userId)
         {
             var sql = @"	SELECT
-                                c.UserId,
-                                SUM(c.TotalCredits) AS Quantity,
-                                ISNULL(u.PendingCredit, 0) AS PendingCredit,
-                                ISNULL(u.UsedCredit, 0) AS UsedCredit,
-                                SUM(c.TotalCredits) - ISNULL(u.PendingCredit, 0) - ISNULL(u.UsedCredit, 0) AS ActiveCredit
+                            c.UserId,
+                            SUM(c.TotalCredits) AS Quantity,
+                            ISNULL(u.PendingCredit, 0) AS PendingCredit,
+                            ISNULL(u.UsedCredit, 0) AS UsedCredit,
+                            SUM(c.TotalCredits) - ISNULL(u.PendingCredit, 0) - ISNULL(u.UsedCredit, 0) AS ActiveCredit
+                        FROM
+                            Credits c
+                        LEFT JOIN (
+                            SELECT
+                                UserId,
+                                COUNT(CASE WHEN Status = 1 THEN 1 END) AS PendingCredit,
+                                COUNT(CASE WHEN Status = 2 THEN 1 END) AS UsedCredit
                             FROM
-                                Credits c
-                            LEFT JOIN (
-                                SELECT
-                                    UserId,
-                                    COUNT(CASE WHEN Status = 1 THEN 1 END) AS PendingCredit,
-                                    COUNT(CASE WHEN Status = 2 THEN 1 END) AS UsedCredit
-                                FROM CreditUsages
-                                WHERE IsDeleted IS NULL
-                                GROUP BY UserId
-                            ) u ON c.UserId = u.UserId
+                                CreditUsages
                             WHERE
-                                c.IsDeleted IS NULL
-                                AND c.UserId = @userId
+                                IsDeleted IS NULL
                             GROUP BY
-                                c.UserId, u.PendingCredit, u.UsedCredit
+                                UserId
+                        ) u ON c.UserId = u.UserId
+                        WHERE
+                            c.IsDeleted IS NULL
+                            AND c.UserId = @userId
+                        GROUP BY
+                            c.UserId, u.PendingCredit, u.UsedCredit;
                             ";
 
             var parameters = new DynamicParameters();
