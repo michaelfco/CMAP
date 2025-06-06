@@ -14,7 +14,8 @@
     <meta content="" name="description">
 
     <!-- Favicon -->
-    <link href="img/favicon.ico" rel="icon">
+    <link href="~/img/favicon-16x16.png" rel="icon">
+   
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -122,8 +123,9 @@
 
                         <!-- Navbar Start -->
                         <nav class="navbar navbar-expand bg-light navbar-light sticky-top px-4 py-0">
-                            <a href="index.html" class="navbar-brand d-flex d-lg-none me-4">
-                                <h2 class="text-primary mb-0"><i class="fa fa-hashtag"></i></h2>
+                    <a href="@Url.Action("dashboard", "Customer")" class="navbar-brand d-flex d-lg-none me-4">
+                        @* <h2 class="text-primary mb-0"><i class="fa fa-hashtag"></i></h2> *@
+                        <img src="~/img/symbol-black.png" width="50px" />
                             </a>
                             <a href="#" class="sidebar-toggler flex-shrink-0">
                                 <i class="fa fa-bars"></i>
@@ -217,7 +219,7 @@
 
                         <!-- Navbar End -->
                         <!-- 404 Start -->
-                        <div class="container-fluid pt-4 px-4">
+                        <div class="container-fluid pt-4 px-3">
                     @*  <div class="row vh-100  rounded align-items-center justify-content-center mx-0"> *@
 
                             <div class="alert alert-success divSuccess d-none" id="divSuccess" align="center" role="alert">
@@ -232,7 +234,8 @@
                                 </span>
                             </div>
 
-                            <div class="row   rounded mx-0" style="min-height:100vh">
+                            @* <div class="row   rounded mx-0" style="min-height:100vh"> *@
+                            <div class="row   rounded " style="min-height:100vh">
 
                         @RenderBody()
 
