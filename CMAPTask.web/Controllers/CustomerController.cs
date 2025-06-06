@@ -113,7 +113,7 @@ namespace CMAPTask.web.Controllers
 
             var urlToSend = $"{_settings.SiteBaseURL}OpenBanking/ShowInstitutions?u={id}&c={userId}";
 
-            var htmlBody = GenerateConsentEmailHtml(details.FirstName, urlToSend, "https://www.sinailogistics.cl/wp-content/uploads/2021/10/sinai300.png");
+            var htmlBody = GenerateConsentEmailHtml(details.FirstName, urlToSend, "https://openvista.io/img/OpenVista-Logo.png");
             await _emailService.SendEmailAsync(details.Email, "Please Provide Your Consent", htmlBody);
 
 
@@ -190,7 +190,7 @@ namespace CMAPTask.web.Controllers
                     <body>
                         <div class='container'>
                             <div class='logo'>
-                                <img src='{logoUrl}' alt='Company Logo' />
+                                <img src='{logoUrl}' alt='Company Logo' width='150' />
                             </div>
                             <div class='header'>
                                 <h2>Action Required: Provide Your Consent</h2>

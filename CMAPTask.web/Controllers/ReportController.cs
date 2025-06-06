@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using OpenBanking.Application.Interfaces;
 using OpenBanking.Infrastructure.Services;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace OpenBanking.web.Controllers
 {
@@ -106,7 +107,8 @@ namespace OpenBanking.web.Controllers
             var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked, true);
             model.RiskSummary = riskSummary;
             model.HighRiskTransactions = highRiskTransactions;
-
+            //view reporting
+            //return View("_ReportExportPDF", model);
             return new Rotativa.AspNetCore.ViewAsPdf("_ReportExportPDF", model)
             {
                 FileName = $"Account_Transactions_{DateTime.Now:yyyyMMdd}.pdf",
