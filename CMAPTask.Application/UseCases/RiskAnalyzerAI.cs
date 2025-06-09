@@ -8,10 +8,44 @@ namespace CMAPTask.Application.UseCases
 {
     public class RiskAnalyzerAI : IRiskAnalyzerAI
     {
-        private readonly HashSet<string> HighRiskMerchants = new() { "Freshto Ideal", "Estacion de Autoservicio CIRISA", "Dortshine Dentists" };
-        private readonly HashSet<string> GamblingKeywords = new() { "Bet", "Casino", "Runebor" };
-        private readonly HashSet<string> RentKeywords = new() { "Rent", "Victoria Embankment", "Liam Brown" };
-        private readonly HashSet<string> BenefitsKeywords = new() { "Benefit", "Government", "Welfare" };
+
+        private readonly HashSet<string> HighRiskMerchants = new()
+            {
+                "Estacion de Autoservicio CIRISA",
+                "Wonga", "QuickQuid", "Sunny Loans", "CashNetUSA", "Amigo Loans",
+                "Lending Stream", "Payday UK", "Cash Advance", "Short Term Loan",
+                "Loan Shop", "Money Shop", "Bitconnect", "OneCoin", "Crypto Exchange",
+                "Forex Trading", "Binary Options", "Investment Club", "Luxury Outlet",
+                "Pawn Shop", "Cash for Gold", "Klarna", "Afterpay", "Laybuy",
+                "Ticket Scalper", "Online Auction", "Marketplace Seller", "Resale Platform",
+                "Fuel Station", "Convenience Store", "Quick Mart", "Petrol Express",
+                "Gas Cash"
+            };
+        private readonly HashSet<string> GamblingKeywords = new()
+            {
+                "Bet", "Casino", "Gamble", "Wager", "Stake", "Betting", "Bookmaker", "Bookie",
+                "Odds", "Punt", "Gaming", "Lotto", "Lottery", "Bingo", "Poker", "Roulette",
+                "Blackjack", "Slots", "Jackpot", "Bet365", "William Hill", "Paddy Power",
+                "Ladbrokes", "Coral", "Betfair", "SkyBet", "Betway", "888", "Unibet",
+                "Bwin", "Sportingbet", "Tabcorp", "Crown", "Star City", "Sports Betting",
+                "Horse Racing", "Greyhound", "Football Bet", "Race Bet", "EGM", "Pokies"
+            };
+        private readonly HashSet<string> RentKeywords = new()
+            {
+                "Rent", "Rental", "Lease", "Tenancy", "Apartment", "Flat", "House Payment",
+                "Landlord", "Property Management", "Housing", "Letting", "Tenancy Agreement",
+                "Foxtons", "Knight Frank", "Savills", "Hammonds", "Lettings", "Estate Agent",
+                "Real Estate", "Property Group", "Housing Association", "Embankment",
+                "Residences", "Court", "Place"
+            };
+        private readonly HashSet<string> BenefitsKeywords = new()
+            {
+                "Benefit", "Government", "Welfare", "Pension", "Allowance", "Subsidy",
+                "Grant", "Social Security", "Unemployment", "Disability", "Child Benefit",
+                "Tax Credit", "Income Support", "Assistance", "DWP", "HMRC", "Centrelink",
+                "HHS", "Social Services", "Treasury", "JobSeeker", "Universal Credit",
+                "PIP", "ESA", "JSA", "SNAP", "Medicaid", "Housing Benefit", "Carer’s Allowance"
+            };
 
         public (RiskSummaryAI, List<TransactionAI>) AnalyzeTransactionsAI(List<TransactionAI> transactions, bool? printLayout = false)
         {

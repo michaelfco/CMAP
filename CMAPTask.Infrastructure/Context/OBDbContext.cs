@@ -23,6 +23,7 @@ namespace CMAPTask.Infrastructure.Context
         public DbSet<RepositoryStorage> RepositoryStorages { get; set; }
         public DbSet<CreditUsage> CreditUsages { get; set; }
         public DbSet<OpenBanking.Domain.Entities.OB.Transaction> Transactions { get; set; }
+        public DbSet<RiskKeyword> RiskKeywords { get; set; }
 
         // Optional: Fluent API configurations
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -24,5 +24,8 @@ namespace CMAPTask.Domain.Entities.OB
         public string AffordabilityAssessment { get; set; } = "Unknown";
         public int AffordabilityScore { get; set; }
         public string InsolvencyRisk { get; set; } = "Unknown";
+
+        public decimal DebtToIncomeRatio { get; set; } 
+        public decimal DisposableIncome { get; set; } 
     }
 }

@@ -12,7 +12,7 @@
             return date.ToString(format);
         return dateStr ?? "N/A";
     }
-    public string FormatCurrency(decimal amount, string currency = "EUR")
+    public string FormatCurrency(decimal amount, string currency)
     {
         return $"{amount:N2} {currency}";
     }
@@ -159,14 +159,14 @@
         <img src="~/img/openvista-logo.svg" width="130px" />
         <h1>Transaction Report</h1>
         <div class="header-details">
-            Client: @Model.CustomerName &nbsp;|&nbsp;
-            Currency: @Model.Currency &nbsp;|&nbsp;
+            Client: @Model.CustomerName  | 
+            Currency: @Model.Currency  | 
             Period:   @if (Model.CreatedAt.HasValue)
             {
                 <span class="badge bg-secondary smaller-text">
                     @(Model.CreatedAt.Value.AddDays(-90).ToString("dd MMM yyyy")) - @(Model.CreatedAt.Value.ToString("dd MMM yyyy"))
                 </span>
-            } &nbsp;|&nbsp;
+            }  | 
             Generated: @(DateTime.Now.ToString("dd MMM yyyy HH:mm")) BST
         </div>
         <hr />
@@ -177,9 +177,9 @@
         <h2>Summary Metrics</h2>
         <table class="data-table">
             <tr><th>Metric</th><th>Value</th></tr>
-            <tr><td>Total Inflows</td><td>@FormatCurrency(Model.RiskSummary.TotalInflows)</td></tr>
-            <tr><td>Total Outflows</td><td>@FormatCurrency(Model.RiskSummary.TotalOutflows)</td></tr>
-            <tr><td>Net Balance</td><td>@FormatCurrency(Model.RiskSummary.NetBalance)</td></tr>
+            <tr><td>Total Inflows</td><td>@FormatCurrency(Model.RiskSummary.TotalInflows, Model.Currency)</td></tr>
+            <tr><td>Total Outflows</td><td>@FormatCurrency(Model.RiskSummary.TotalOutflows, Model.Currency)</td></tr>
+            <tr><td>Net Balance</td><td>@FormatCurrency(Model.RiskSummary.NetBalance, Model.Currency)</td></tr>
             @{
                 var totalTransactions = Model.Transactions.Transactions.Booked.Count() + Model.Transactions.Transactions.Pending.Count();
                 var highRiskPercentage = totalTransactions > 0 ? (Model.HighRiskTransactions.Count() * 100.0 / totalTransactions) : 0;
@@ -194,6 +194,7 @@
         </table>
     </div>
 
+    <!-- RISK OVERVIEW SECTION -->
     <div class="section">
         <h2>Risk Overview</h2>
         <table class="data-table">
@@ -204,14 +205,37 @@
                     @Model.RiskSummary.RiskLevel
                 </td>
             </tr>
-            <tr><td>High-Value Transactions</td><td>@Model.RiskSummary.HighValueTransactionCount @(Model.RiskSummary.HighValueTransactionCount > 5 ? "(High Risk)" : "")</td></tr>
-            <tr><td>Total Rent</td><td>@FormatCurrency(Model.RiskSummary.TotalRent)</td></tr>
-            <tr><td>Total Gambling</td><td>@FormatCurrency(Model.RiskSummary.TotalGambling)</td></tr>
-            <tr><td>High-Risk Merchants</td><td>@FormatCurrency(Model.RiskSummary.TotalHighRiskMerchant)</td></tr>
-            <tr><td>Total Benefits</td><td>@FormatCurrency(Model.RiskSummary.TotalBenefits)</td></tr>
+            <tr>
+                <td>High-Value Transactions</td>
+                <td>
+                    @Model.RiskSummary.HighValueTransactionCount @(Model.RiskSummary.HighValueTransactionCount > 5 ? "(High Risk)" : "")
+                </td>
+            </tr>
+            <tr><td>Total Rent</td><td>@FormatCurrency(Model.RiskSummary.TotalRent, Model.Currency)</td></tr>
+            <tr>
+                <td>Total Gambling</td>
+                <td>
+                    @FormatCurrency(Model.RiskSummary.TotalGambling, Model.Currency) @(Model.RiskSummary.TotalGambling > 5000 ? "(High Risk)" : "")
+                </td>
+            </tr>
+            <tr><td>High-Risk Merchants</td><td>@FormatCurrency(Model.RiskSummary.TotalHighRiskMerchant, Model.Currency)</td></tr>
+            <tr><td>Total Benefits</td><td>@FormatCurrency(Model.RiskSummary.TotalBenefits, Model.Currency)</td></tr>
+            <tr>
+                <td>Debt-to-Income Ratio</td>
+                <td style="color:@(Model.RiskSummary.DebtToIncomeRatio <= 36 ? "#3c763d" : Model.RiskSummary.DebtToIncomeRatio <= 40 ? "#333" : "#a94442")">
+                    @Model.RiskSummary.DebtToIncomeRatio.ToString("F2")% @(Model.RiskSummary.DebtToIncomeRatio > 40 ? "(High Risk)" : "")
+                </td>
+            </tr>
+            <tr>
+                <td>Disposable Income</td>
+                <td style="color:@(Model.RiskSummary.DisposableIncome >= 0 ? "#3c763d" : "#a94442")">
+                    @FormatCurrency(Model.RiskSummary.DisposableIncome, Model.Currency) @(Model.RiskSummary.DisposableIncome < 0 ? "(High Risk)" : "")
+                </td>
+            </tr>
         </table>
     </div>
 
+    <!-- RISK ASSESSMENTS SECTION -->
     <div class="section">
         <h2>Risk Assessments</h2>
         <table class="data-table">
@@ -231,6 +255,7 @@
         </table>
     </div>
 
+    <!-- RISK ALERTS SECTION -->
     <div class="section">
         <h2>Risk Alerts</h2>
         @if (Model.RiskSummary.RiskAlerts.Any())
