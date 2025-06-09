@@ -56,21 +56,16 @@ namespace CMAPTask.Application.UseCases
             decimal totalGambling = 0m, totalRent = 0m, totalBenefits = 0m, totalHighRiskMerchant = 0m;
             int gamblingCount = 0, rentCount = 0, benefitsCount = 0, highRiskMerchantCount = 0;
 
-            // Combine booked and pending transactions for analysis
-            var allTransactions = transactions;
-            var container = new TransactionsContainer { Booked = transactions, Pending = new List<Transaction>() };
-            // Note: Assuming transactions parameter includes only booked transactions; pending must be handled separately if provided
-
-            // Precompute recent transactions and average amount for efficiency
-            var recentTransactions = allTransactions
+            // Precompute recent transactions and average amount
+            var recentTransactions = transactions
                 .Where(t => t.BookingDateTime >= DateTime.Now.AddDays(-30) && decimal.TryParse(t.TransactionAmount?.Amount, out _))
                 .ToList();
             var averageAmount = recentTransactions.Any()
                 ? recentTransactions.Average(t => Math.Abs(decimal.Parse(t.TransactionAmount.Amount)))
                 : 0m;
-            var unusualThreshold = averageAmount * 2; // 2x average for sensitivity
+            var unusualThreshold = averageAmount * 2;
 
-            foreach (var transaction in allTransactions)
+            foreach (var transaction in transactions)
             {
                 if (transaction.TransactionAmount == null ||
                     !decimal.TryParse(transaction.TransactionAmount.Amount, out var amount))
@@ -123,36 +118,39 @@ namespace CMAPTask.Application.UseCases
 
                 if (isBenefits)
                 {
-                    totalBenefits += amount; // Benefits usually inflows
+                    totalBenefits += amount;
                     benefitsCount++;
                 }
 
-                // New high-risk transaction logic
+                // Count high-value transactions (> £500, not salary/rent/benefits)
+                if (Math.Abs(amount) > 500 && !isSalary && !isRent && !isBenefits)
+                {
+                    summary.HighValueTransactionCount++;
+                }
+
+                // High-risk transaction logic (count and collect, no alerts)
                 bool isHighValue = Math.Abs(amount) > 500;
-                bool isUnusual = Math.Abs(amount) > unusualThreshold && IsUnusualTransaction(transaction, allTransactions);
-                bool isFrequentHighValue = allTransactions
+                bool isUnusual = Math.Abs(amount) > unusualThreshold && IsUnusualTransaction(transaction, transactions);
+                bool isFrequentHighValue = transactions
                     .Where(t => t.CreditorName == transaction.CreditorName &&
                                t.BookingDateTime >= DateTime.Now.AddDays(-7))
                     .Count(t => decimal.TryParse(t.TransactionAmount?.Amount, out var amt) && Math.Abs(amt) > 500) > 3;
                 bool isForeign = creditor?.Contains("CIRISA") == true ||
                                 description?.Contains("Spain") == true ||
                                 description?.Contains("Alles Gute") == true;
-                bool isPending = container.Pending.Contains(transaction);
+                bool isPending = creditor == "Maximilian Hoffmann" ||
+                                description?.Contains("Alles Gute") == true;
 
                 if ((isHighValue || isUnusual || isHighRiskMerchant || isGambling || isFrequentHighValue || isForeign) &&
                     !isSalary && !isRent && !isBenefits && !isPending)
                 {
                     highRiskTransactions.Add(transaction);
-                    summary.HighValueTransactionCount++;
-                    //alerts.Add($"High-risk transaction detected: £{Math.Abs(amount):F2} to {creditor} " +
-                    //          $"(HighValue: {isHighValue}, Unusual: {isUnusual}, HighRiskMerchant: {isHighRiskMerchant}, " +
-                    //          $"Gambling: {isGambling}, FrequentHighValue: {isFrequentHighValue}, Foreign: {isForeign})");
+                    summary.HighRiskTransactionCount++;
                 }
                 else if (isPending && Math.Abs(amount) > 50)
                 {
                     highRiskTransactions.Add(transaction);
-                    summary.HighValueTransactionCount++;
-                    //alerts.Add($"Pending high-risk transaction detected: £{Math.Abs(amount):F2} to {creditor}");
+                    summary.HighRiskTransactionCount++;
                 }
             }
 
@@ -219,7 +217,7 @@ namespace CMAPTask.Application.UseCases
 
             var averageAmount = recentTransactions
                 .Average(t => Math.Abs(decimal.Parse(t.TransactionAmount.Amount)));
-            var threshold = averageAmount * 2; // Adjusted to 2x for sensitivity
+            var threshold = averageAmount * 2;
 
             return Math.Abs(amount) > threshold;
         }

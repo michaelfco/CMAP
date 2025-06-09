@@ -113,6 +113,12 @@
                         </div>
                         <div class="col">
                             <div class="p-2 bg-light rounded-3">
+                                <span class="fw-medium text-secondary d-block mb-1 smaller-text"><i class="fas fa-store me-2 text-warning"></i>High-Risk Merchants</span>
+                                <span class="smaller-text fw-bold">@Model.RiskSummary.TotalHighRiskMerchant.ToString("C", new System.Globalization.CultureInfo("en-GB"))</span>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-2 bg-light rounded-3">
                                 <span class="fw-medium text-secondary d-block mb-1 smaller-text"><i class="fas fa-hand-holding-usd me-2 text-success"></i>Total Benefits</span>
                                 <span class="smaller-text fw-bold">@Model.RiskSummary.TotalBenefits.ToString("C", new System.Globalization.CultureInfo("en-GB"))</span>
                             </div>
@@ -332,7 +338,6 @@
             background-color: #ffe6e6 !important;
         }
 
-        /* General font size reduction */
         .smaller-heading {
             font-size: 0.9rem !important;
         }
@@ -345,7 +350,6 @@
             font-size: 1rem !important;
         }
 
-        /* Compact cards and components */
         .compact-card {
             padding: 5px !important;
             min-height: 80px !important;
@@ -355,7 +359,6 @@
             padding: 0.25rem 0.5rem !important;
         }
 
-        /* Summary cards */
         .summary-card {
             padding: 5px !important;
             min-height: 74px !important;
@@ -375,24 +378,20 @@
                 margin-bottom: 0.25rem !important;
             }
 
-        /* Badge styling */
         .smaller-badge {
             font-size: 0.65rem !important;
             padding: 0.3em 0.6em !important;
             border-radius: 0.2rem !important;
         }
 
-        /* Reduce chart heights */
         #riskBarChart, #inflowsOutflowsChart {
             max-height: 160px !important;
         }
 
-        /* Reduce font size for Affordability and Insolvency Risk results */
         .card-text.smaller-text.fw-bold.text-dark {
             font-size: 0.75rem !important;
         }
 
-        /* Compact table rows */
         .compact-table-row td {
             padding: 0.3rem 0.5rem !important;
         }
@@ -405,7 +404,6 @@
 
 @section Scripts {
     <script>
-        // Initialize tooltips
         document.addEventListener('DOMContentLoaded', function () {
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -417,7 +415,6 @@
             window.location.href = `/Report/ExportToPDF?eid=${eid}&uid=${uid}`;
         }
 
-        // Risk Distribution (Stacked Bar Chart)
         const riskBarCtx = document.getElementById('riskBarChart').getContext('2d');
         new Chart(riskBarCtx, {
             type: 'bar',
@@ -505,7 +502,6 @@
             }
         });
 
-        // Inflows Against Outflows Percentage (Stacked Bar Chart)
         const inflowsOutflowsCtx = document.getElementById('inflowsOutflowsChart').getContext('2d');
         const totalInflows = @Model.RiskSummary.TotalInflows;
         const totalOutflows = @Model.RiskSummary.TotalOutflows;
@@ -586,23 +582,13 @@
                         title: {
                             display: true,
                             text: 'Percentage (%)',
-                            font: {
-                                size: 10
-                            }
+                            font: { size: 10 }
                         },
-                        ticks: {
-                            font: {
-                                size: 8
-                            }
-                        }
+                        ticks: { font: { size: 8 } }
                     },
                     y: {
                         stacked: true,
-                        ticks: {
-                            font: {
-                                size: 8
-                            }
-                        }
+                        ticks: { font: { size: 8 } }
                     }
                 }
             }

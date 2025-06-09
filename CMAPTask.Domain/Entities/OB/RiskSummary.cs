@@ -26,6 +26,9 @@ namespace CMAPTask.Domain.Entities.OB
         public string InsolvencyRisk { get; set; } = "Unknown";
 
         public decimal DebtToIncomeRatio { get; set; } 
-        public decimal DisposableIncome { get; set; } 
+        public decimal DisposableIncome { get; set; }
+
+        public int HighRiskTransactionCount { get; set; } 
+       
     }
 }
