@@ -1,0 +1,68 @@
+﻿@using static OpenBanking.Domain.Enums.Enum
+@model OpenBanking.Application.Common.Models.PagedResult<OpenBanking.web.ViewModel.RecentUserViewModel>
+@{
+    Layout = "_LayoutNew";
+}
+
+
+<div class="col-12">
+    <div class="bg-light rounded h-100 p-4">
+        <h6 class="mb-4">Complete Transactions</h6>
+
+        <form method="get" asp-action="Complete">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" name="searchQuery" value="@Model.SearchQuery" placeholder="Search...">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" class="form-control" name="fromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" placeholder="From date">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" class="form-control" name="toDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" placeholder="To date">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary" type="submit">Filter</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>CreatedAt</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Items)
+                    {
+                        <tr>
+                            <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td>@($"{user.FirstName} {user.LastName}")</td>
+                            <td>@user.Email</td>
+                            <td>@user.PhoneNumber</td>
+                            <td><a href="@($"/report?eid={user.EndUserId}&uid={user.UserId}")">View</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <nav>
+            <ul class="pagination">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(Model.Page == i ? "active" : "")">
+                        <a class="page-link" href="?searchQuery=@Model.SearchQuery&page=@i&fromDate=@Model.FromDate?.ToString("yyyy-MM-dd")&toDate=@Model.ToDate?.ToString("yyyy-MM-dd")">
+                            @i
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </div>
+</div>

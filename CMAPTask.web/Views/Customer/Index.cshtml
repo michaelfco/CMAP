@@ -72,8 +72,11 @@
 
     <div class="row g-4 pt-4">
         <div class="col-sm-12 col-xl-6">
-            <div class="bg-light rounded h-100 p-4">
-                <h6 class="mb-4">Last Pending Requests</h6>
+            <div class="bg-light rounded h-100 p-4">              
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h6 class="mb-0">Last Pending Requests</h6>
+                    <a href="@Url.Action("Index","Transaction")">Show All</a>
+                </div>
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -99,7 +102,10 @@
         </div>
         <div class="col-sm-12 col-xl-6">
             <div class="bg-light rounded h-100 p-4">
-                <h6 class="mb-4">Last Completed Request</h6>
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h6 class="mb-0">Last Complete Requests</h6>
+                    <a href="@Url.Action("Complete","Transaction")">Show All</a>
+                </div>
                 <table class="table table-striped">
                     <thead>
                         <tr>

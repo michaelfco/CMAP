@@ -11,6 +11,7 @@ using OpenBanking.Infrastructure.Services;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using OpenBanking.Infrastructure.Repository;
+using System.Text;
 
 namespace OpenBanking.web.Controllers
 {
@@ -54,7 +55,7 @@ namespace OpenBanking.web.Controllers
                 Currency = transaction.Currency,
                 Transactions = transactions,
                 LastUpdated = transaction.LastUpdated,
-                CreatedAt = transaction.CreatedAt,                
+                CreatedAt = transaction.CreatedAt,
                 EndUserId = endUserId,
                 UserId = userId,
                 CustomerName = $"{endUser.FirstName} {endUser.LastName}"
@@ -64,14 +65,102 @@ namespace OpenBanking.web.Controllers
             view.RiskSummary = riskSummary;
             view.HighRiskTransactions = highRiskTransactions;
 
-            // ✅ Now render the view using the actual model from the DB
             Console.WriteLine($"[DEBUG] Rendering Transactions view for account {view.AccountId} (Currency: {view.Currency})");
             Console.WriteLine($"[DEBUG] Risk Summary: Level={view.RiskSummary.RiskLevel}, Inflows={view.RiskSummary.TotalInflows}, Outflows={view.RiskSummary.TotalOutflows}, Net={view.RiskSummary.NetBalance}");
 
             return View("Index", view);
         }
 
-     
+        public async Task<IActionResult> ExportToCSV(string eid, string uid, string type)
+        {
+            if (!Guid.TryParse(eid, out Guid endUserId) || !Guid.TryParse(uid, out Guid userId))
+            {
+                return BadRequest("Invalid end user ID or user ID.");
+            }
+
+            if (type != "booked" && type != "pending" && type != "all")
+            {
+                return BadRequest("Invalid transaction type. Must be 'booked', 'pending', or 'all'.");
+            }
+
+            // Build view model
+            var transaction = await _transactionsRepository.GetCompleteTransactionAsync(endUserId, userId);
+            var transactions = JsonSerializer.Deserialize<TransactionResponse>(transaction.JsonData, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            var endUser = await _companyEndUserRepository.GetByEndUserIsync(endUserId);
+            var view = new AccountTransactionsViewModel
+            {
+                AccountId = null,
+                Currency = transaction.Currency,
+                Transactions = transactions,
+                LastUpdated = transaction.LastUpdated,
+                CreatedAt = transaction.CreatedAt,
+                EndUserId = endUserId,
+                UserId = userId,
+                CustomerName = $"{endUser.FirstName} {endUser.LastName}"
+            };
+
+            var (riskSummary, highRiskTransactions) = _riskAnalyzer.AnalyzeTransactions(transactions.Transactions.Booked);
+            view.RiskSummary = riskSummary;
+            view.HighRiskTransactions = highRiskTransactions;
+
+            // Build CSV
+            var csv = new StringBuilder();
+            csv.AppendLine("Transaction ID,Date,Amount,Party,Description,Type,Risk,Status");
+
+            // Process transactions based on type
+            var transactionSets = new List<(IEnumerable<Transaction> Transactions, string Status)>();
+            if (type == "all")
+            {
+                transactionSets.Add((view.Transactions.Transactions.Booked, "Booked"));
+                transactionSets.Add((view.Transactions.Transactions.Pending, "Pending"));
+            }
+            else
+            {
+                var selectedTransactions = type == "booked" ? view.Transactions.Transactions.Booked : view.Transactions.Transactions.Pending;
+                transactionSets.Add((selectedTransactions, type == "booked" ? "Booked" : "Pending"));
+            }
+
+            foreach (var (transactionList, status) in transactionSets)
+            {
+                foreach (var t in transactionList)
+                {
+                    var date = t.BookingDate != null && DateTime.TryParse(t.BookingDate, out var parsedDate)
+                        ? parsedDate.ToString("dd MMM yyyy")
+                        : t.BookingDate ?? "N/A";
+                    var amount = decimal.TryParse(t.TransactionAmount?.Amount, out var parsedAmount)
+                        ? parsedAmount.ToString("F2")
+                        : t.TransactionAmount?.Amount ?? "N/A";
+                    var party = t.CreditorName ?? t.DebtorName ?? "Unknown";
+                    var description = t.RemittanceInformationUnstructured ?? "";
+                    var transactionType = t.ProprietaryBankTransactionCode ?? "";
+                    var risk = view.HighRiskTransactions.Contains(t) ? "High Risk" : "Low Risk";
+
+                    // Escape commas and quotes
+                    description = description.Contains(",") || description.Contains("\"")
+                        ? $"\"{description.Replace("\"", "\"\"")}\""
+                        : description;
+                    party = party.Contains(",") || party.Contains("\"")
+                        ? $"\"{party.Replace("\"", "\"\"")}\""
+                        : party;
+                    transactionType = transactionType.Contains(",") || transactionType.Contains("\"")
+                        ? $"\"{transactionType.Replace("\"", "\"\"")}\""
+                        : transactionType;
+
+                    csv.AppendLine($"{t.TransactionId},{date},{amount},{party},{description},{transactionType},{risk},{status}");
+                }
+            }
+
+            // Return CSV as file
+            var bytes = Encoding.UTF8.GetBytes(csv.ToString());
+            var stream = new MemoryStream(bytes);
+            var filename = type == "all" ? $"transactions_all_{DateTime.UtcNow:yyyy-MM-dd}.csv" : $"transactions_{type}_{DateTime.UtcNow:yyyy-MM-dd}.csv";
+            return File(stream, "text/csv", filename);
+        }
+
+
 
         [Authorize]
         public async Task<IActionResult> ExportToPDF(string eid, string uid)
@@ -120,7 +209,7 @@ namespace OpenBanking.web.Controllers
             //return View("_ReportExportPDF", model);
             return new Rotativa.AspNetCore.ViewAsPdf("_ReportExportPDF", model)
             {
-                FileName = $"Account_Transactions_{DateTime.Now:yyyyMMdd}.pdf",
+                FileName = $"OB_Reporting_{model.CustomerName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf",
                 PageSize = Rotativa.AspNetCore.Options.Size.A4,
                 PageMargins = new Rotativa.AspNetCore.Options.Margins(20, 10, 20, 10), // Top, Right, Bottom, Left in mm
                 CustomSwitches = "--footer-center \"Page [page] of [topage]\" --footer-font-size 10 --footer-spacing 5"

@@ -88,15 +88,15 @@
                 <div class="navbar-nav w-100 mt-2">
                     <a href="@Url.Action("dashboard", "Customer")" class="nav-item nav-link"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
                     <div class="nav-item dropdown">
-                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i class="fa fa-table me-2"></i>Transactions</a>
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i class="fa fa-table me-2"></i>Transaction</a>
                         <div class="dropdown-menu bg-transparent border-0">
-                            <a href="#" class="dropdown-item">Pending</a>
-                            <a href="#" class="dropdown-item">Complete</a>                           
+                            <a href="@Url.Action("Index","Transaction")" class="dropdown-item">Pending</a>
+                            <a href="@Url.Action("Complete","Transaction")" class="dropdown-item">Complete</a>
                         </div>
                     </div>
 
-                    <a href="widget.html" class="nav-item nav-link"><i class="fa fa-th me-2"></i>Users</a>
-                    <a href="form.html" class="nav-item nav-link"><i class="fa fa-keyboard me-2"></i>Credit Usage</a>
+                    <a href="#" class="nav-item nav-link"><i class="fa fa-th me-2"></i>Users</a>
+                    <a href="#" class="nav-item nav-link"><i class="fa fa-keyboard me-2"></i>Credit Usage</a>
                     @*    <a href="table.html" class="nav-item nav-link"><i class="fa fa-table me-2"></i>Tables</a>
                     <a href="chart.html" class="nav-item nav-link"><i class="fa fa-chart-bar me-2"></i>Charts</a>
                     <div class="nav-item dropdown">
@@ -280,11 +280,35 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const links = document.querySelectorAll(".navbar-nav .nav-link");
+            // Select both nav-link and dropdown-item elements
+            const links = document.querySelectorAll(".navbar-nav .nav-link, .navbar-nav .dropdown-item");
 
             links.forEach(link => {
-                if (link.href === window.location.href || window.location.pathname.includes(link.getAttribute("href"))) {
+                const linkHref = link.getAttribute("href");
+                const currentPath = window.location.pathname;
+
+                // Normalize href and pathname to handle trailing slashes
+                const normalizedLinkHref = linkHref ? linkHref.replace(/\/$/, "") : "";
+                const normalizedCurrentPath = currentPath.replace(/\/$/, "");
+
+                // Check for exact match only
+                if (normalizedLinkHref && normalizedLinkHref === normalizedCurrentPath) {
                     link.classList.add("active");
+
+                    // If the link is a dropdown-item or a nav-link in a dropdown, open the dropdown
+                    const dropdown = link.closest(".dropdown");
+                    if (dropdown) {
+                        const dropdownToggle = dropdown.querySelector(".nav-link.dropdown-toggle");
+                        if (dropdownToggle) {
+                            // Use Bootstrap's Dropdown API to show the dropdown
+                            const bsDropdown = new bootstrap.Dropdown(dropdownToggle);
+                            bsDropdown.show();
+
+                            // Ensure the dropdown stays open by adding the 'show' class
+                            dropdown.classList.add("show");
+                            dropdown.querySelector(".dropdown-menu").classList.add("show");
+                        }
+                    }
                 } else {
                     link.classList.remove("active");
                 }
