@@ -156,7 +156,7 @@ namespace OpenBanking.web.Controllers
             // Return CSV as file
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
             var stream = new MemoryStream(bytes);
-            var filename = type == "all" ? $"transactions_all_{DateTime.UtcNow:yyyy-MM-dd}.csv" : $"transactions_{type}_{DateTime.UtcNow:yyyy-MM-dd}.csv";
+            var filename = type == "all" ? $"transactions_{view.CustomerName}_{DateTime.Now:yyyyMMdd_HHmmss}.csv" : $"transactions_{type}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
             return File(stream, "text/csv", filename);
         }
 
