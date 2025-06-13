@@ -291,7 +291,7 @@ namespace OpenBanking.web.Controllers
                 </html>";
         }
 
-        [HttpPost]
+        [HttpGet,HttpPost]
         [Route("Account/Logout")]
         public async Task<IActionResult> Logout()
         {
