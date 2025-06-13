@@ -52,9 +52,9 @@ namespace OpenBanking.Domain.Entities.OB
         public Guid UseCredentialId { get; set; }
 
         // Navigation properties
-        public virtual ICollection<CompanyEndUser> CompanyEndUsers { get; set; } = new List<CompanyEndUser>();
-        public virtual ICollection<Credit> Credits { get; set; } = new List<Credit>();
-        public virtual ICollection<GoCardlessSetting> GoCardlessSettings { get; set; } = new List<GoCardlessSetting>();
-        public virtual ICollection<RepositoryStorage> RepositoryStorages { get; set; } = new List<RepositoryStorage>();
+        //public virtual ICollection<CompanyEndUser> CompanyEndUsers { get; set; } = new List<CompanyEndUser>();
+        //public virtual ICollection<Credit> Credits { get; set; } = new List<Credit>();
+        //public virtual ICollection<GoCardlessSetting> GoCardlessSettings { get; set; } = new List<GoCardlessSetting>();
+        //public virtual ICollection<RepositoryStorage> RepositoryStorages { get; set; } = new List<RepositoryStorage>();
     }
 }

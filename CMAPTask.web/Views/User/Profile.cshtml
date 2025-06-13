@@ -1,0 +1,80 @@
+﻿@model OpenBanking.web.ViewModel.UserProfileViewModel
+@using static OpenBanking.Domain.Enums.Enum
+@{
+    Layout = "_LayoutNew";
+}
+
+<div class="container mt-5">
+    <h2>User Profile</h2>
+    @if (TempData["MsgSuccess"] != null)
+    {
+        <div class="alert alert-success">@TempData["MsgSuccess"]</div>
+    }
+    <div class="row g-4">
+        <div class="col">
+            <div class="bg-light rounded h-100 p-4">
+                <h6 class="mb-4">Profile Details</h6>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Company Name</label>
+                    <p>@Model.User.CompanyName</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email Address</label>
+                    <p>@Model.User.Email</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Phone Number</label>
+                    <p>@(Model.User.PhoneNumber ?? "N/A")</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Address</label>
+                    <p>@(Model.User.Address ?? "N/A")</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">City</label>
+                    <p>@(Model.User.City ?? "N/A")</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Country</label>
+                    <p>@(Model.User.Country ?? "N/A")</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Postal Code</label>
+                    <p>@(Model.User.PostalCode ?? "N/A")</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Role</label>
+                    <p>@Model.User.Role</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="bg-light rounded h-100 p-4">
+                <h6 class="mb-4">Change Password</h6>
+                <form id="changePasswordForm" asp-action="ChangePassword" asp-controller="User" method="post">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="CurrentPassword" name="CurrentPassword" placeholder="Current Password" />
+                        <label for="CurrentPassword">Current Password</label>
+                        <span class="text-danger" asp-validation-for="ChangePassword.CurrentPassword"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="NewPassword" name="NewPassword" placeholder="New Password" />
+                        <label for="NewPassword">New Password</label>
+                        <span class="text-danger" asp-validation-for="ChangePassword.NewPassword"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="ConfirmPassword" name="ConfirmPassword" placeholder="Confirm Password" />
+                        <label for="ConfirmPassword">Confirm Password</label>
+                        <span class="text-danger" asp-validation-for="ChangePassword.ConfirmPassword"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,88 @@
+﻿@model OpenBanking.Domain.Entities.OB.User
+@using static OpenBanking.Domain.Enums.Enum
+@{
+    Layout = "_LayoutNew";
+    var title = Model.UserId == Guid.Empty ? "Create New User" : "Edit User";
+}
+
+<div class="container mt-5">
+    <form id="userForm" asp-action="Save" asp-controller="User" method="post">
+        <input type="hidden" asp-for="UserId" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <input type="hidden" asp-for="UseCredentialId" />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="row g-4">
+            <div class="col">
+                <div class="bg-light rounded h-100 p-4">
+                    <h6 class="mb-4">Enter User's Details</h6>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="CompanyName" class="form-control" placeholder="Company Name" />
+                        <label asp-for="CompanyName">Company Name</label>
+                        <span asp-validation-for="CompanyName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="Email" type="email" class="form-control" placeholder="name@example.com" />
+                        <label asp-for="Email">Email Address</label>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    @if (Model.UserId == Guid.Empty)
+                    {
+                        <p class="text-info">A password will be automatically generated and sent to the user.</p>
+                    }
+                    else
+                    {
+                        <div class="form-floating mb-3">
+                            <input asp-for="PasswordHash" type="password" class="form-control" placeholder="Password (optional)" />
+                            <label asp-for="PasswordHash">Password (optional)</label>
+                            <span asp-validation-for="PasswordHash" class="text-danger"></span>
+                        </div>
+                    }
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="Phone Number" />
+                        <label asp-for="PhoneNumber">Phone Number</label>
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="Address" class="form-control" placeholder="Address" />
+                        <label asp-for="Address">Address</label>
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="City" class="form-control" placeholder="City" />
+                        <label asp-for="City">City</label>
+                        <span asp-validation-for="City" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="Country" class="form-control" placeholder="Country" />
+                        <label asp-for="Country">Country</label>
+                        <span asp-validation-for="Country" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="PostalCode" class="form-control" placeholder="Postal Code" />
+                        <label asp-for="PostalCode">Postal Code</label>
+                        <span asp-validation-for="PostalCode" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select asp-for="Role" class="form-control" asp-items="Html.GetEnumSelectList<UserRole>()">
+                            <option value="">Select Role</option>
+                        </select>
+                        <label asp-for="Role">Role</label>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a asp-action="Index" asp-controller="User" class="btn btn-secondary">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

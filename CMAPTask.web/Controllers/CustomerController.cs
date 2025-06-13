@@ -113,7 +113,9 @@ namespace CMAPTask.web.Controllers
 
             var urlToSend = $"{_settings.SiteBaseURL}OpenBanking/ShowInstitutions?u={id}&c={userId}";
 
-            var htmlBody = GenerateConsentEmailHtml(details.FirstName, urlToSend, "https://openvista.io/img/OpenVista-Logo.png");
+            var displayName = User.Claims.FirstOrDefault(c => c.Type == "DisplayName")?.Value;
+
+            var htmlBody = GenerateConsentEmailHtml(details.FirstName, urlToSend,displayName, "https://openvista.io/img/OpenVista-Logo.png");
             await _emailService.SendEmailAsync(details.Email, "Please Provide Your Consent", htmlBody);
 
 
@@ -129,7 +131,7 @@ namespace CMAPTask.web.Controllers
         }
 
 
-        public static string GenerateConsentEmailHtml(string customerName, string consentLink, string logoUrl)
+        public static string GenerateConsentEmailHtml(string customerName, string consentLink,string displayCompanyName ,string logoUrl)
         {
             return $@"
                     <!DOCTYPE html>
@@ -210,7 +212,7 @@ namespace CMAPTask.web.Controllers
                                 <p><a href='{consentLink}'>{consentLink}</a></p>
 
                                 <p>Thank you for choosing us.</p>
-                                <p>Best regards,<br>Your Lending Partner</p>
+                                <p>Best regards,<br>{displayCompanyName}</p>
                             </div>
                             <div class='footer'>
                                 <p>This email was sent automatically. Please do not reply to it.</p>
