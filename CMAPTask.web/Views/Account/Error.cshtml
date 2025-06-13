@@ -1,0 +1,28 @@
+﻿@model OpenBanking.web.ViewModel.ErrorViewModel
+@{
+    Layout = "_LayoutClean";
+}
+<div class="row h-100 align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-5 col-xl-4">
+        <div class="bg-light rounded p-4 p-sm-5 my-4 mx-3">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="">
+                    <img src="~/img/openvista-logo.svg" width="150px" />
+                </div>
+                <h3>Error</h3>
+            </div>
+            <div class="alert alert-danger">
+                @Model.Message
+            </div>
+            @if (Model.ShowRequestId)
+            {
+                <p>
+                    <strong>Request ID:</strong> <code>@Model.RequestId</code>
+                </p>
+            }
+            <div class="text-center">
+                <a asp-action="Login" asp-controller="Account" class="btn btn-primary py-3 w-100 mb-4">Back to Login</a>
+            </div>
+        </div>
+    </div>
+</div>

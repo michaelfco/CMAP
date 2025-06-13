@@ -4,6 +4,7 @@ using CMAPTask.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace OpenBanking.Infrastructure.Migrations
 {
     [DbContext(typeof(OBDbContext))]
-    partial class OBDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250613205724_addtokentable")]
+    partial class addtokentable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -237,30 +240,6 @@ namespace OpenBanking.Infrastructure.Migrations
                     b.ToTable("GoCardlessSettings");
                 });
 
-            modelBuilder.Entity("OpenBanking.Domain.Entities.OB.PasswordResetToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ExpiryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PasswordResetTokens");
-                });
-
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.RepositoryStorage", b =>
                 {
                     b.Property<Guid>("RepoId")
@@ -453,17 +432,6 @@ namespace OpenBanking.Infrastructure.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("OpenBanking.Domain.Entities.OB.PasswordResetToken", b =>
-                {
-                    b.HasOne("OpenBanking.Domain.Entities.OB.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("OpenBanking.Domain.Entities.OB.RepositoryStorage", b =>
