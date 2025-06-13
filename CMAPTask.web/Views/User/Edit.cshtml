@@ -1,4 +1,4 @@
-﻿@model OpenBanking.Domain.Entities.OB.User
+﻿@model OpenBanking.web.ViewModel.UserEditViewModel
 @using static OpenBanking.Domain.Enums.Enum
 @{
     Layout = "_LayoutNew";
@@ -9,7 +9,6 @@
     <form id="userForm" asp-action="Save" asp-controller="User" method="post">
         <input type="hidden" asp-for="UserId" />
         <input type="hidden" asp-for="CreatedAt" />
-        <input type="hidden" asp-for="UseCredentialId" />
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="row g-4">
             <div class="col">
@@ -35,8 +34,8 @@
                     else
                     {
                         <div class="form-floating mb-3">
-                            <input asp-for="PasswordHash" type="password" class="form-control" placeholder="Password (optional)" />
-                            <label asp-for="PasswordHash">Password (optional)</label>
+                            <input asp-for="PasswordHash" type="password" class="form-control" placeholder="Password (leave blank to keep current)" data-val="false" />
+                            <label asp-for="PasswordHash">Password (leave blank to keep current)</label>
                             <span asp-validation-for="PasswordHash" class="text-danger"></span>
                         </div>
                     }
@@ -79,6 +78,13 @@
                         <span asp-validation-for="Role" class="text-danger"></span>
                     </div>
 
+                    <div class="form-floating mb-3">
+                        <select asp-for="UseCredentialId" class="form-control" asp-items="@Model.GoCardlessSettingsOptions">
+                        </select>
+                        <label asp-for="UseCredentialId">GoCardless Settings</label>
+                        <span asp-validation-for="UseCredentialId" class="text-danger"></span>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">Save</button>
                     <a asp-action="Index" asp-controller="User" class="btn btn-secondary">Cancel</a>
                 </div>
@@ -86,3 +92,7 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

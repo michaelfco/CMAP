@@ -1,8 +1,13 @@
-﻿using static OpenBanking.Domain.Enums.Enum;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using static OpenBanking.Domain.Enums.Enum;
 
-namespace OpenBanking.web.ViewModel
+namespace OpenBanking.Application.DTOs
 {
-    public class UserViewModel
+    public class UserDto
     {
         public Guid UserId { get; set; }
         public string CompanyName { get; set; }
@@ -13,9 +18,5 @@ namespace OpenBanking.web.ViewModel
         public Guid UseCredentialId { get; set; }
         public string Environment { get; set; }
         public Guid? GoCardlessConfigId { get; set; }
-        public string GoCardlessSettingsCombo => Environment != null && GoCardlessConfigId.HasValue
-            ? $"{Environment} ({GoCardlessConfigId})"
-            : "None";
     }
 }
-

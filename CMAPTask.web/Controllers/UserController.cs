@@ -1,6 +1,7 @@
 ﻿using CMAPTask.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using OpenBanking.Application.Common.Helpers;
 using OpenBanking.Application.Common.Models;
@@ -9,9 +10,10 @@ using OpenBanking.Domain.Entities.OB;
 using OpenBanking.Infrastructure.Extensions;
 using OpenBanking.Infrastructure.Services;
 using OpenBanking.web.ViewModel;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using static Dapper.SqlMapper;
+using System.Threading.Tasks;
 
 namespace OpenBanking.web.Controllers
 {
@@ -25,10 +27,11 @@ namespace OpenBanking.web.Controllers
         private readonly OBSettings _settings;
 
         public UserController(
-        IHttpContextAccessor httpContextAccessor,
-        IUserRepository userRepository,
-        EmailService emailService,
-        IOptions<OBSettings> options, ICreditRepository creditRepository) : base(creditRepository)
+            IHttpContextAccessor httpContextAccessor,
+            IUserRepository userRepository,
+            EmailService emailService,
+            IOptions<OBSettings> options,
+            ICreditRepository creditRepository) : base(creditRepository)
         {
             _httpContextAccessor = httpContextAccessor;
             _userRepository = userRepository;
@@ -36,7 +39,6 @@ namespace OpenBanking.web.Controllers
             _settings = options.Value;
             _creditRepository = creditRepository;
         }
-
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(string searchQuery = "", int page = 1, DateTime? fromDate = null, DateTime? toDate = null)
@@ -57,7 +59,10 @@ namespace OpenBanking.web.Controllers
                 Email = e.Email,
                 PhoneNumber = e.PhoneNumber,
                 Role = e.Role,
-                CreatedAt = e.CreatedAt
+                CreatedAt = e.CreatedAt,
+                UseCredentialId = e.UseCredentialId,
+                Environment = e.Environment,
+                GoCardlessConfigId = e.GoCardlessConfigId
             });
 
             if (fromDate.HasValue)
@@ -89,6 +94,14 @@ namespace OpenBanking.web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(Guid? id)
         {
+            var goCardlessSettings = await _userRepository.GetGoCardlessSettingsAsync();
+            var settingsOptions = goCardlessSettings.Select(g => new SelectListItem
+            {
+                Value = g.ConfigId.ToString(),
+                Text = $"{g.Environment} ({g.ConfigId})"
+            }).ToList();
+            settingsOptions.Insert(0, new SelectListItem { Value = "", Text = "Select GoCardless Settings" });
+
             if (id.HasValue && id != Guid.Empty)
             {
                 var user = await _userRepository.GetByUserIdAsync(id.Value);
@@ -97,40 +110,89 @@ namespace OpenBanking.web.Controllers
                     return NotFound();
                 }
                 user.PasswordHash = null;
-                return View(user);
+                return View(new UserEditViewModel
+                {
+                    UserId = user.UserId,
+                    CompanyName = user.CompanyName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Address = user.Address,
+                    City = user.City,
+                    Country = user.Country,
+                    PostalCode = user.PostalCode,
+                    Role = user.Role,
+                    CreatedAt = user.CreatedAt,
+                    UseCredentialId = user.UseCredentialId,
+                    GoCardlessSettingsOptions = settingsOptions
+                });
             }
-            return View(new User());
+
+            return View(new UserEditViewModel
+            {
+                GoCardlessSettingsOptions = settingsOptions
+            });
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Save(User user)
+        public async Task<IActionResult> Save(UserEditViewModel model)
         {
-            ModelState.Remove("PasswordHash");
+            var goCardlessSettings = await _userRepository.GetGoCardlessSettingsAsync();
+            model.GoCardlessSettingsOptions = goCardlessSettings.Select(g => new SelectListItem
+            {
+                Value = g.ConfigId.ToString(),
+                Text = $"{g.Environment} ({g.ConfigId})"
+            }).ToList();
+            model.GoCardlessSettingsOptions.Insert(0, new SelectListItem { Value = "", Text = "Select GoCardless Settings" });
 
-            var existingUserWithEmail = await _userRepository.GetByEmailAsync(user.Email);
-            if (user.UserId == Guid.Empty && existingUserWithEmail != null)
+            // Clear all PasswordHash-related validation errors
+            ModelState.Remove("PasswordHash");
+            if (ModelState.ContainsKey("user.PasswordHash"))
+            {
+                ModelState.Remove("user.PasswordHash");
+            }
+
+            var existingUserWithEmail = await _userRepository.GetByEmailAsync(model.Email);
+            if (model.UserId == Guid.Empty && existingUserWithEmail != null)
             {
                 ModelState.AddModelError("Email", "This email address is already in use.");
-                return View("Edit", user);
+                return View("Edit", model);
             }
-            else if (user.UserId != Guid.Empty && existingUserWithEmail != null && existingUserWithEmail.UserId != user.UserId)
+            else if (model.UserId != Guid.Empty && existingUserWithEmail != null && existingUserWithEmail.UserId != model.UserId)
             {
                 ModelState.AddModelError("Email", "This email address is already in use by another user.");
-                return View("Edit", user);
+                return View("Edit", model);
             }
 
             if (!ModelState.IsValid)
             {
-                return View("Edit", user);
+                return View("Edit", model);
             }
+
+            var user = new User
+            {
+                UserId = model.UserId,
+                CompanyName = model.CompanyName,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber,
+                Address = model.Address,
+                City = model.City,
+                Country = model.Country,
+                PostalCode = model.PostalCode,
+                Role = model.Role,
+                CreatedAt = model.CreatedAt,
+                UseCredentialId = model.UseCredentialId
+            };
 
             string generatedPassword = null;
             if (user.UserId == Guid.Empty)
             {
                 user.UserId = Guid.NewGuid();
                 user.CreatedAt = DateTime.UtcNow;
-                user.UseCredentialId = Guid.NewGuid();
+                if (user.UseCredentialId == Guid.Empty)
+                {
+                    user.UseCredentialId = Guid.NewGuid();
+                }
                 generatedPassword = GenerateRandomPassword();
                 user.PasswordHash = HashPassword(generatedPassword);
                 await _userRepository.SaveAsync(user);
@@ -143,14 +205,13 @@ namespace OpenBanking.web.Controllers
             else
             {
                 var existingUser = await _userRepository.GetByUserIdAsync(user.UserId);
-                if (string.IsNullOrEmpty(user.PasswordHash))
+                if (string.IsNullOrWhiteSpace(model.PasswordHash))
                 {
-                    user.PasswordHash = existingUser.PasswordHash;
+                    user.PasswordHash = existingUser.PasswordHash; // Retain existing password
                 }
                 else
                 {
-                    // Ensure password is hashed if provided
-                    user.PasswordHash = HashPassword(user.PasswordHash);
+                    user.PasswordHash = HashPassword(model.PasswordHash);
                 }
                 await _userRepository.UpdateAsync(user);
                 TempData["MsgSuccess"] = "User updated successfully!";
@@ -215,7 +276,6 @@ namespace OpenBanking.web.Controllers
             System.Diagnostics.Debug.WriteLine($"Input Hash: {hashedInput}");
             System.Diagnostics.Debug.WriteLine($"Stored Hash: {user.PasswordHash}");
 
-            // Handle both raw and hashed passwords for migration
             bool isPasswordValid = string.Equals(hashedInput, user.PasswordHash, StringComparison.Ordinal) ||
                                   string.Equals(model.CurrentPassword?.Trim(), user.PasswordHash, StringComparison.Ordinal);
 
@@ -226,7 +286,6 @@ namespace OpenBanking.web.Controllers
                 return View("Profile", viewModel);
             }
 
-            // Update to hashed password if raw was used
             user.PasswordHash = HashPassword(model.NewPassword);
             await _userRepository.UpdateAsync(user);
 
@@ -345,4 +404,3 @@ namespace OpenBanking.web.Controllers
         }
     }
 }
-

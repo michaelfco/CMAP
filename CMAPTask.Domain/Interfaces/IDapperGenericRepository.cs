@@ -14,5 +14,6 @@ namespace OpenBanking.Domain.Interfaces
         Task<T?> GetByIdAsync<T>(string tableName, string keyColumn, object id);
         Task<IEnumerable<T>> QueryAsync<T>(string sql, object? parameters = null);
         Task<T> QueryFirstOrDefaultAsync<T>(string sql, object? parameters = null);
+        Task<T> QuerySingleAsync<T>(string sql, object parameters = null);
     }
 }

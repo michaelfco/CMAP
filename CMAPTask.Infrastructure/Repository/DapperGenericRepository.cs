@@ -53,4 +53,8 @@ public class DapperGenericRepository : IDapperGenericRepository
     {
         return await _db.QueryFirstOrDefaultAsync<T>(sql, parameters);
     }
+    public async Task<T> QuerySingleAsync<T>(string sql, object parameters = null)
+    {
+        return await _db.QuerySingleAsync<T>(sql, parameters);
+    }
 }

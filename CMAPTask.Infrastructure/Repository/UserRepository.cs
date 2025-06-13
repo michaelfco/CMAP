@@ -1,12 +1,11 @@
 ﻿using Dapper;
 using OpenBanking.Application.Common.Models;
+using OpenBanking.Application.DTOs;
 using OpenBanking.Application.Interfaces;
 using OpenBanking.Domain.Entities.OB;
 using OpenBanking.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OpenBanking.Infrastructure.Repository
@@ -26,12 +25,25 @@ namespace OpenBanking.Infrastructure.Repository
             return user.UserId;
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync(Guid userId)
+        public async Task<IEnumerable<UserDto>> GetAllAsync(Guid userId)
         {
-            var sql = "SELECT * FROM Users WHERE (IsDeleted IS NULL OR IsDeleted = 0)";
+            var sql = @"
+                SELECT 
+                    u.UserId,
+                    u.CompanyName,
+                    u.Email,
+                    u.PhoneNumber,
+                    u.Role,
+                    u.CreatedAt,
+                    u.UseCredentialId,
+                    g.Environment,
+                    g.ConfigId AS GoCardlessConfigId
+                FROM Users u
+                LEFT JOIN GoCardlessSettings g ON u.UseCredentialId = g.ConfigId
+                WHERE (u.IsDeleted IS NULL OR u.IsDeleted = 0)";
             var parameters = new DynamicParameters();
             parameters.Add("userId", userId);
-            return await _repo.QueryAsync<User>(sql, parameters);
+            return await _repo.QueryAsync<UserDto>(sql, parameters);
         }
 
         public async Task<User> GetByUserIdAsync(Guid userId)
@@ -50,6 +62,12 @@ namespace OpenBanking.Infrastructure.Repository
         public async Task UpdateAsync(User user)
         {
             await _repo.UpdateAsync(user, "Users", "UserId");
+        }
+
+        public async Task<IEnumerable<GoCardlessSetting>> GetGoCardlessSettingsAsync()
+        {
+            var sql = "SELECT ConfigId, Environment FROM GoCardlessSettings WHERE IsDeleted IS NULL OR IsDeleted = 0";
+            return await _repo.QueryAsync<GoCardlessSetting>(sql);
         }
     }
 }
