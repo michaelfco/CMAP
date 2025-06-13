@@ -37,7 +37,16 @@ namespace OpenBanking.Infrastructure.Services
                 EnableSsl = true
             };
 
-            await smtp.SendMailAsync(mail);
+            try
+            {
+                await smtp.SendMailAsync(mail);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
         }
     }
 }

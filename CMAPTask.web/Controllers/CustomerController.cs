@@ -65,7 +65,7 @@ namespace CMAPTask.web.Controllers
                 Credits = credit
             }).OrderByDescending(a => a.CreatedAt).ToList();
 
-          
+
 
             return View(model);
         }
@@ -86,52 +86,63 @@ namespace CMAPTask.web.Controllers
 
                 return RedirectToAction("NewRequest");
             }
-
-            var userId = User.GetUserId();
-
-            var entity = new CompanyEndUser
+            try
             {
-                UserId = userId,
-                FirstName = details.FirstName,
-                LastName = details.LastName,
-                Email = details.Email,
-                PhoneNumber = details.PhoneNumber,
-                Status = Status.pending,
-            };
+                var userId = User.GetUserId();
 
-            var id = await _companyUserRepository.SaveAsync(entity);
+                var entity = new CompanyEndUser
+                {
+                    UserId = userId,
+                    FirstName = details.FirstName,
+                    LastName = details.LastName,
+                    Email = details.Email,
+                    PhoneNumber = details.PhoneNumber,
+                    Status = Status.pending,
+                };
 
-            var creditUsage = new CreditUsage
-            {
-                UserId = userId,
-                EndUserId = id,
-                Status = Status.pending
-               
-            };
+                var id = await _companyUserRepository.SaveAsync(entity);
 
-            await _creditRepository.AddPendingCreditUsageAsync(creditUsage);
+                var creditUsage = new CreditUsage
+                {
+                    UserId = userId,
+                    EndUserId = id,
+                    Status = Status.pending
 
-            var urlToSend = $"{_settings.SiteBaseURL}OpenBanking/ShowInstitutions?u={id}&c={userId}";
+                };
 
-            var displayName = User.Claims.FirstOrDefault(c => c.Type == "DisplayName")?.Value;
+                await _creditRepository.AddPendingCreditUsageAsync(creditUsage);
 
-            var htmlBody = GenerateConsentEmailHtml(details.FirstName, urlToSend,displayName, "https://openvista.io/img/OpenVista-Logo.png");
-            await _emailService.SendEmailAsync(details.Email, "Please Provide Your Consent", htmlBody);
+                var urlToSend = $"{_settings.SiteBaseURL}OpenBanking/ShowInstitutions?u={id}&c={userId}";
+
+                var displayName = User.Claims.FirstOrDefault(c => c.Type == "DisplayName")?.Value;
+
+                var htmlBody = GenerateConsentEmailHtml(details.FirstName, urlToSend, displayName, "https://openvista.io/img/OpenVista-Logo.png");
+                await _emailService.SendEmailAsync(details.Email, "Please Provide Your Consent", htmlBody);
 
 
-            TempData["MsgSuccess"] = "Customer details submitted successfully!";
-            TempData["CustomerDetails"] = System.Text.Json.JsonSerializer.Serialize(details);
+                TempData["MsgSuccess"] = "Customer details submitted successfully!";
+                TempData["CustomerDetails"] = System.Text.Json.JsonSerializer.Serialize(details);
+                return Json(new
+                {
+                    success = true,
+                    message = "Customer details submitted successfully!"
+                });
+            }
+            catch (Exception ex) {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
 
-            return Json(new
-            {
-                success = true,
-                message = "Customer details submitted successfully!"
-            });
-           
+            }
+
+
+
         }
 
 
-        public static string GenerateConsentEmailHtml(string customerName, string consentLink,string displayCompanyName ,string logoUrl)
+        public static string GenerateConsentEmailHtml(string customerName, string consentLink, string displayCompanyName, string logoUrl)
         {
             return $@"
                     <!DOCTYPE html>
