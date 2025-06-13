@@ -14,7 +14,7 @@ namespace OpenBanking.web.ViewModel
         public string Environment { get; set; }
         public Guid? GoCardlessConfigId { get; set; }
         public string GoCardlessSettingsCombo => Environment != null && GoCardlessConfigId.HasValue
-            ? $"{Environment} ({GoCardlessConfigId})"
+            ? $"{Environment}"
             : "None";
     }
 }
