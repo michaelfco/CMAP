@@ -113,7 +113,7 @@ namespace OpenBanking.web.Controllers
                 await _db.SaveChangesAsync();
 
                 var resetLink = Url.Action("ResetPassword", "Account", new { token }, Request.Scheme);
-                var emailBody = GenerateResetEmailHtml(user.CompanyName, resetLink, _settings.SiteBaseURL, "https://openvista.io/img/Version2-OpenVista-Logo.svg");
+                var emailBody = GenerateResetEmailHtml(user.CompanyName, resetLink, _settings.SiteBaseURL, "https://openvista.io/img/LogoBlueGraphics.png");
                 await _emailService.SendEmailAsync(user.Email, "Password Reset Request", emailBody);
             }
 

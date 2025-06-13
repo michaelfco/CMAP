@@ -116,7 +116,7 @@ namespace CMAPTask.web.Controllers
 
                 var displayName = User.Claims.FirstOrDefault(c => c.Type == "DisplayName")?.Value;
 
-                var htmlBody = GenerateConsentEmailHtml(details.FirstName, urlToSend, displayName, "https://openvista.io/img/Version2-OpenVista-Logo.svg");
+                var htmlBody = GenerateConsentEmailHtml(details.FirstName, urlToSend, displayName, "https://openvista.io/img/LogoBlueGraphics.png");
                 await _emailService.SendEmailAsync(details.Email, "Please Provide Your Consent", htmlBody);
 
 
