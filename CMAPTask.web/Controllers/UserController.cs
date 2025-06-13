@@ -197,7 +197,7 @@ namespace OpenBanking.web.Controllers
                 user.PasswordHash = HashPassword(generatedPassword);
                 await _userRepository.SaveAsync(user);
 
-                var htmlBody = GenerateWelcomeEmailHtml(user.CompanyName, user.Email, generatedPassword, _settings.SiteBaseURL, "https://openvista.io/img/OpenVista-Logo.png");
+                var htmlBody = GenerateWelcomeEmailHtml(user.CompanyName, user.Email, generatedPassword, _settings.SiteBaseURL, "https://openvista.io/img/Version2-OpenVista-Logo.svg");
                 await _emailService.SendEmailAsync(user.Email, "Welcome to Our Platform", htmlBody);
 
                 TempData["MsgSuccess"] = "User created successfully!";
